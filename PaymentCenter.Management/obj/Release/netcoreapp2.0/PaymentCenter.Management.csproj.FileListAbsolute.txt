@@ -1,0 +1,13 @@
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Management.deps.json
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Management.runtimeconfig.json
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Management.runtimeconfig.dev.json
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Management.dll
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Management.pdb
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Infrastructure.dll
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\bin\Release\netcoreapp2.0\PaymentCenter.Infrastructure.pdb
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\obj\Release\netcoreapp2.0\PaymentCenter.Management.csprojResolveAssemblyReference.cache
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\obj\Release\netcoreapp2.0\PaymentCenter.Management.csproj.CoreCompileInputs.cache
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\obj\Release\netcoreapp2.0\PaymentCenter.Management.AssemblyInfoInputs.cache
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\obj\Release\netcoreapp2.0\PaymentCenter.Management.AssemblyInfo.cs
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\obj\Release\netcoreapp2.0\PaymentCenter.Management.dll
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Management\obj\Release\netcoreapp2.0\PaymentCenter.Management.pdb

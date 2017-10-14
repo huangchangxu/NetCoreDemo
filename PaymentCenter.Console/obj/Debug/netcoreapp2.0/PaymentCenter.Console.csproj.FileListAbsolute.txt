@@ -1,0 +1,4 @@
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Console\obj\Debug\netcoreapp2.0\PaymentCenter.Console.csprojResolveAssemblyReference.cache
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Console\obj\Debug\netcoreapp2.0\PaymentCenter.Console.csproj.CoreCompileInputs.cache
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Console\obj\Debug\netcoreapp2.0\PaymentCenter.Console.AssemblyInfoInputs.cache
+E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Console\obj\Debug\netcoreapp2.0\PaymentCenter.Console.AssemblyInfo.cs
