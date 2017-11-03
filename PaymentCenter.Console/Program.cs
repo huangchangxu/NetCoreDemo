@@ -15,7 +15,9 @@ namespace PaymentCenter.ConsoleApp
 
             //RabbitMqTest.PublishTest();
 
-            LogTest.InfoTest();
+            //LogTest.InfoTest();
+
+            RSATest.Test();
 
             Console.ReadLine();
         }

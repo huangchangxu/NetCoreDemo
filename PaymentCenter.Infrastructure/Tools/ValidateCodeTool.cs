@@ -1,7 +1,12 @@
-﻿using System;
-using System.DrawingCore;
-using System.DrawingCore.Imaging;
+﻿using SixLabors.Fonts;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Drawing;
+using SixLabors.ImageSharp.Drawing.Pens;
+using SixLabors.Shapes;
+using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Numerics;
 
 namespace PaymentCenter.Infrastructure.Tools
 {
@@ -43,61 +48,96 @@ namespace PaymentCenter.Infrastructure.Tools
             }
             return code;
         }
-
-        /// <summary>  
-        /// 该方法是将生成的随机数写入图像文件  
-        /// </summary>  
-        /// <param name="code">code是一个随机数</param>
-        /// <param name="numbers">生成位数（默认4位）</param>  
-        public static MemoryStream Create(out string code, int numbers = 4)
+        /// <summary>
+        /// 画点+画字=验证码byte[]
+        /// </summary>
+        /// <param name="code"></param>
+        /// <param name="vCodeNum"></param>
+        /// <param name="xx"></param>
+        /// <param name="yy"></param>
+        /// <returns></returns>
+        public static byte[] GetValidCodeByte(string fontPath,out string code, int vCodeNum=4,int xx = 80, int yy = 25)
         {
-            code = RndNum(numbers);
-            Bitmap Img = null;
-            Graphics g = null;
-            MemoryStream ms = null;
-            Random random = new Random();
-            //验证码颜色集合  
-            Color[] c = { Color.Black, Color.Red, Color.DarkBlue, Color.Green, Color.Orange, Color.Brown, Color.DarkCyan, Color.Purple };
-
-            //验证码字体集合
-            string[] fonts = { "Arial", "Georgia" };
-
-
-            //定义图像的大小，生成图像的实例  
-            Img = new Bitmap((int)code.Length * 18, 32);
-
-            g = Graphics.FromImage(Img);//从Img对象生成新的Graphics对象    
-
-            g.Clear(Color.White);//背景设为白色  
-
-            //在随机位置画背景点  
-            for (int i = 0; i < 100; i++)
+            var bb = default(byte[]);
+            code = RndNum(vCodeNum);
+            try
             {
-                int x = random.Next(Img.Width);
-                int y = random.Next(Img.Height);
-                g.DrawRectangle(new Pen(Color.LightGray, 0), x, y, 1, 1);
-            }
-            //验证码绘制在g中  
-            for (int i = 0; i < code.Length; i++)
-            {
-                int cindex = random.Next(c.Length-1);//随机颜色索引值  
-                int findex = random.Next(fonts.Length-1);//随机字体索引值  
-                Font f = new Font(fonts[findex], 15, FontStyle.Bold);//字体  
-                Brush b = new SolidBrush(c[cindex]);//颜色  
-                int ii = 4;
-                if ((i + 1) % 2 == 0)//控制验证码不在同一高度  
+                var content = code;
+                var dianWith = 1; //点宽度
+                var xx_space = 10;  //点与点之间x坐标间隔
+                var yy_space = 5;    //y坐标间隔
+                var wenZiLen = vCodeNum;  //文字长度
+                var maxX = xx / wenZiLen; //每个文字最大x宽度
+                var prevWenZiX = 0; //前面一个文字的x坐标
+                var size = maxX;//字体大小
+
+                //字体
+                var install_Family = new FontCollection().Install(fontPath);
+                //var install_Family = new FontCollection().Find("arial");
+                var font = new Font(install_Family, size);  //字体
+
+                //点坐标
+                var listPath = new List<IPath>();
+                for (int i = 0; i < xx / xx_space; i++)
                 {
-                    ii = 2;
+                    for (int j = 0; j < yy / yy_space; j++)
+                    {
+                        var position = new Vector2(i * xx_space, j * yy_space);
+                        var linerLine = new LinearLineSegment(position, position);
+                        var shapesPath = new SixLabors.Shapes.Path(linerLine);
+                        listPath.Add(shapesPath);
+                    }
                 }
-                g.DrawString(code.Substring(i, 1), f, b, 3 + (i * 12), ii);//绘制一个验证字符  
-            }
-            ms = new MemoryStream();//生成内存流对象  
-            Img.Save(ms, ImageFormat.Jpeg);//将此图像以Png图像文件的格式保存到流中  
 
-            //回收资源  
-            g.Dispose();
-            Img.Dispose();
-            return ms;
+                //画图
+                using (Image<Rgba32> image = new Image<Rgba32>(xx, yy))   //画布大小
+                {
+                    image.Mutate(x =>
+                    {
+                        var imgProc = x;
+
+                        //逐个画字
+                        for (int i = 0; i < wenZiLen; i++)
+                        {
+                            //当前的要输出的字
+                            var nowWenZi = content.Substring(i, 1);
+
+                            //文字坐标
+                            var wenXY = new Vector2();
+                            var maxXX = prevWenZiX + (maxX - size);
+                            wenXY.X = new Random().Next(prevWenZiX, maxXX);
+                            wenXY.Y = new Random().Next(0, yy - size);
+
+                            prevWenZiX = Convert.ToInt32(Math.Floor(wenXY.X)) + size;
+
+                            //画字
+                            imgProc.DrawText(
+                                   nowWenZi,   //文字内容
+                                   font,
+                                   i % 2 > 0 ? Rgba32.HotPink : Rgba32.Red,
+                                   wenXY,
+                                   TextGraphicsOptions.Default);
+                        }
+
+                        //画点 
+                        imgProc.BackgroundColor(Rgba32.WhiteSmoke).   //画布背景
+                                     Draw(
+                                     Pens.Dot(Rgba32.HotPink, dianWith),   //大小
+                                     new PathCollection(listPath)  //坐标集合
+                                 );
+                    });
+                    using (MemoryStream stream = new MemoryStream())
+                    {
+                        image.SaveAsPng(stream);
+                        bb = stream.GetBuffer();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+            return bb;
         }
+
     }
 }

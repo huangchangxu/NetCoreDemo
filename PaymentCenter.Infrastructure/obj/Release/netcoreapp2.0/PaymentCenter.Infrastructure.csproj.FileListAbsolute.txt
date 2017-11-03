@@ -6,4 +6,3 @@ E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Relea
 E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Release\netcoreapp2.0\PaymentCenter.Infrastructure.AssemblyInfo.cs
 E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Release\netcoreapp2.0\PaymentCenter.Infrastructure.dll
 E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Release\netcoreapp2.0\PaymentCenter.Infrastructure.pdb
-E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Release\netcoreapp2.0\PaymentCenter.Infrastructure.csprojResolveAssemblyReference.cache

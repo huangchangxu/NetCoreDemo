@@ -8,11 +8,17 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Options;
 using PaymentCenter.Management.Models;
 using PaymentCenter.Infrastructure.Tools;
+using Microsoft.AspNetCore.Hosting;
 
 namespace PaymentCenter.Management.Controllers
 {
     public class HomeController : Controller
     {
+        private IHostingEnvironment _host;
+        public HomeController(IHostingEnvironment host)
+        {
+            _host = host;
+        }
         public IActionResult Index()
         {
             return View();
@@ -48,12 +54,12 @@ namespace PaymentCenter.Management.Controllers
         /// 图形验证码
         /// </summary>
         /// <returns></returns>
-        public IActionResult ValidateCode()
+        public FileResult ValidateCode()
         {
-            System.IO.MemoryStream ms = ValidateCodeTool.Create(out string code);
+            var fontPath = _host.ContentRootPath + "/wwwroot/fonts/arial.ttf";
+            var codeArray = ValidateCodeTool.GetValidCodeByte(fontPath,out string code);
             //HttpContext.Session.SetString("LoginValidateCode", code);
-            Response.Body.Dispose();
-            return File(ms.ToArray(), @"image/png");
+            return File(codeArray, @"image/png");
         }
     }
 }
