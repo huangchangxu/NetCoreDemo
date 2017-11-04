@@ -7558,7 +7558,7 @@
       ]
     },
     "Remotion.Linq/2.1.1": {
-      "sha512": "PxQXqsSpGo2cPUSJcUqwomBEooPzG6Bra2hJu1Bpvg/5KsmqvW7z0mg0UHIAJMJwcYopgkiJnOpZ6BXsp4RD3g==",
+      "sha512": "IJn0BqkvwEDpP+2qjvci7n4/a9f7DhKESLWb2/uG4xQh3rTkGTBUz69bI4IivCoKkTFAqjXxYDZw2K/npohjsw==",
       "type": "package",
       "path": "remotion.linq/2.1.1",
       "files": [
@@ -12542,11 +12542,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "E:\\NetCoreApp\\DSHLN.NetCore.PaymentCenter\\PaymentCenter.Api\\PaymentCenter.Api.csproj",
+      "projectUniqueName": "E:\\Coding\\NET\\NetCoreDemo\\PaymentCenter.Api\\PaymentCenter.Api.csproj",
       "projectName": "PaymentCenter.Api",
-      "projectPath": "E:\\NetCoreApp\\DSHLN.NetCore.PaymentCenter\\PaymentCenter.Api\\PaymentCenter.Api.csproj",
+      "projectPath": "E:\\Coding\\NET\\NetCoreDemo\\PaymentCenter.Api\\PaymentCenter.Api.csproj",
       "packagesPath": "C:\\Users\\huangchangxu\\.nuget\\packages\\",
-      "outputPath": "E:\\NetCoreApp\\DSHLN.NetCore.PaymentCenter\\PaymentCenter.Api\\obj\\",
+      "outputPath": "E:\\Coding\\NET\\NetCoreDemo\\PaymentCenter.Api\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -12560,7 +12560,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "http://packages.dshl-dev.org/nuget/": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {

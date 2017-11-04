@@ -7,3 +7,12 @@ E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Debug
 E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.dll
 E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.pdb
 E:\NetCoreApp\DSHLN.NetCore.PaymentCenter\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.csprojResolveAssemblyReference.cache
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\bin\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.deps.json
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\bin\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.dll
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\bin\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.pdb
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.csprojResolveAssemblyReference.cache
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.csproj.CoreCompileInputs.cache
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.AssemblyInfoInputs.cache
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.AssemblyInfo.cs
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.dll
+E:\Coding\NET\NetCoreDemo\PaymentCenter.Infrastructure\obj\Debug\netcoreapp2.0\PaymentCenter.Infrastructure.pdb

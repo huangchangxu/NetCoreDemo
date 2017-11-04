@@ -1558,7 +1558,7 @@
     "Newtonsoft.Json/10.0.3": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-wBM7i7i3U2WX0ecor4zdVGvgrwFUjuigBoHKiL+nH39fCOpCPjBY3RDqJM32edvdyTAVdjzlccHsg41+/+zpSA==",
+      "sha512": "sha512-hSXaFmh7hNCuEoC4XNY5DrRkLDzYHqPx/Ik23R4J86Z7PE/Y6YidhG602dFVdLBRSdG6xp9NabH3dXpcoxWvww==",
       "path": "newtonsoft.json/10.0.3",
       "hashPath": "newtonsoft.json.10.0.3.nupkg.sha512"
     },
@@ -1719,7 +1719,7 @@
     "SixLabors.ImageSharp/1.0.0-beta0001": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-QpjXcufDJ5di7nzuQP0ePJngpqU1/ullJnkucoz9D6FguTITXGexpF+RFsPv7ayCYL3JtJmnDMch28EDd1BBNA==",
+      "sha512": "sha512-aWTk1brm7ND7+io9jNjZv4pp5BofBQPh72/WFGL9pV6drsOwpzec+svjXIFNnBvP+LnekjRDzgssBPdkIvEc0w==",
       "path": "sixlabors.imagesharp/1.0.0-beta0001",
       "hashPath": "sixlabors.imagesharp.1.0.0-beta0001.nupkg.sha512"
     },
@@ -1831,7 +1831,7 @@
     "System.Data.Common/4.3.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-bb9Yvj/G2LkscESB85IUx3SUrQn2VTYt1kgb438Q/pxC28mzb5z/ByTNCvm8X6RKDLdEgEHfA1nz8D7gVN5K5g==",
+      "sha512": "sha512-lm6E3T5u7BOuEH0u18JpbJHxBfOJPuCyl4Kg1RH10ktYLp5uEEE1xKrHW56/We4SnZpGAuCc9N0MJpSDhTHZGQ==",
       "path": "system.data.common/4.3.0",
       "hashPath": "system.data.common.4.3.0.nupkg.sha512"
     },

@@ -3041,7 +3041,7 @@
       ]
     },
     "Newtonsoft.Json/10.0.3": {
-      "sha512": "wBM7i7i3U2WX0ecor4zdVGvgrwFUjuigBoHKiL+nH39fCOpCPjBY3RDqJM32edvdyTAVdjzlccHsg41+/+zpSA==",
+      "sha512": "hSXaFmh7hNCuEoC4XNY5DrRkLDzYHqPx/Ik23R4J86Z7PE/Y6YidhG602dFVdLBRSdG6xp9NabH3dXpcoxWvww==",
       "type": "package",
       "path": "newtonsoft.json/10.0.3",
       "files": [
@@ -3345,7 +3345,7 @@
       ]
     },
     "SixLabors.ImageSharp/1.0.0-beta0001": {
-      "sha512": "QpjXcufDJ5di7nzuQP0ePJngpqU1/ullJnkucoz9D6FguTITXGexpF+RFsPv7ayCYL3JtJmnDMch28EDd1BBNA==",
+      "sha512": "aWTk1brm7ND7+io9jNjZv4pp5BofBQPh72/WFGL9pV6drsOwpzec+svjXIFNnBvP+LnekjRDzgssBPdkIvEc0w==",
       "type": "package",
       "path": "sixlabors.imagesharp/1.0.0-beta0001",
       "files": [
@@ -3896,7 +3896,7 @@
       ]
     },
     "System.Data.Common/4.3.0": {
-      "sha512": "bb9Yvj/G2LkscESB85IUx3SUrQn2VTYt1kgb438Q/pxC28mzb5z/ByTNCvm8X6RKDLdEgEHfA1nz8D7gVN5K5g==",
+      "sha512": "lm6E3T5u7BOuEH0u18JpbJHxBfOJPuCyl4Kg1RH10ktYLp5uEEE1xKrHW56/We4SnZpGAuCc9N0MJpSDhTHZGQ==",
       "type": "package",
       "path": "system.data.common/4.3.0",
       "files": [
@@ -7594,11 +7594,11 @@
       "hideWarningsAndErrors": true
     },
     "restore": {
-      "projectUniqueName": "E:\\NetCoreApp\\DSHLN.NetCore.PaymentCenter\\PaymentCenter.Infrastructure\\PaymentCenter.Infrastructure.csproj",
+      "projectUniqueName": "E:\\Coding\\NET\\NetCoreDemo\\PaymentCenter.Infrastructure\\PaymentCenter.Infrastructure.csproj",
       "projectName": "PaymentCenter.Infrastructure",
-      "projectPath": "E:\\NetCoreApp\\DSHLN.NetCore.PaymentCenter\\PaymentCenter.Infrastructure\\PaymentCenter.Infrastructure.csproj",
+      "projectPath": "E:\\Coding\\NET\\NetCoreDemo\\PaymentCenter.Infrastructure\\PaymentCenter.Infrastructure.csproj",
       "packagesPath": "C:\\Users\\huangchangxu\\.nuget\\packages\\",
-      "outputPath": "E:\\NetCoreApp\\DSHLN.NetCore.PaymentCenter\\PaymentCenter.Infrastructure\\obj\\",
+      "outputPath": "E:\\Coding\\NET\\NetCoreDemo\\PaymentCenter.Infrastructure\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -7612,7 +7612,6 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-        "http://packages.dshl-dev.org/nuget/": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
