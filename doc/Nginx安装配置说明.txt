@@ -1,0 +1,102 @@
+3、配置安装Nginx服务（也可选择其他监听）
+	一键安装shell命令
+	
+	
+		#!/bin/sh
+
+		#关闭进程
+		killpids(){
+		  pids=($(ps -ef | grep $1 | awk '{print $2}'))
+		  for pid in ${pids[@]}; do
+			echo "关闭进程: pid ${pid}"
+			kill -9 ${pid}
+		  done
+		}
+		killpids nginx
+
+		#uninstall old rpms
+		rmrpms(){
+		  oldRpms=($(rpm -qa|grep $1))
+		  for oldRpm in ${oldRpms[@]}; do
+			echo "旧版$1: ${oldRpm}"
+			echo "删除..."
+			yum -y remove $1 ${oldRpm}
+		  done
+		}
+		rmrpms nginx
+
+		#删除
+		rm -rf /etc/rc.d/init.d/nginx
+		rm -rf /etc/logrotate.d/nginx
+		rm -rf /etc/sysconfig/nginx
+		rm -rf /etc/nginx
+		rm -rf /usr/lib64/nginx
+		rm -rf /usr/sbin/nginx
+		rm -rf /usr/libexec/initscripts/legacy-actions/nginx
+		rm -rf /usr/share/nginx
+		rm -rf /var/log/nginx
+		rm -rf /var/cache/nginx
+
+
+		#install nginx
+		echo "安装依赖"
+		yum install -y pcre pcre-devel  
+		yum install -y zlib zlib-devel  
+		yum install -y openssl openssl-devel
+		yum install -y python-daemon
+		#查看CentOS版本号
+		centosVersion=$(rpm -q centos-release)
+		echo "CentOS版本：$centosVersion"
+		if [[ $centosVersion =~ "-7-" ]]
+		  then
+			echo "安装包：nginx-nr-agent-2.0.0-11.el7.ngx.noarch.rpm"
+			# http://nginx.org/packages/centos/7/noarch/RPMS/nginx-nr-agent-2.0.0-11.el7.ngx.noarch.rpm
+			rpm -ivh nginx-nr-agent-2.0.0-11.el7.ngx.noarch.rpm
+		  else
+			echo "安装包：nginx-nr-agent-2.0.0-11.el6.ngx.noarch.rpm"
+			# http://nginx.org/packages/centos/6/noarch/RPMS/nginx-nr-agent-2.0.0-11.el6.ngx.noarch.rpm
+			rpm -ivh nginx-nr-agent-2.0.0-11.el6.ngx.noarch.rpm
+		fi
+
+		#设置YUM源
+		repo='/etc/yum.repos.d/nginx.repo'
+		rm -rf $repo
+		touch $repo
+		echo '[nginx]
+		name=nginx repo
+		baseurl=http://nginx.org/packages/centos/$releasever/$basearch/
+		gpgcheck=0
+		enabled=1' >> $repo
+
+		#安装
+		yum -y install nginx
+
+		#启动并查看状态
+		service nginx start
+		service nginx status
+
+		#开机启动
+		echo ""
+		echo "开机启动"
+		chkconfig nginx on
+
+		#修改端口号
+		echo "端口号: 80"
+
+		#显示版本
+		echo "version:"
+		rpm -qa|grep nginx
+		echo ""
+
+		#代理端口
+		echo '若要代理8080端口，执行如下命令：
+		\cp -f /usr/nginx/default.conf /etc/nginx/conf.d/'
+		echo ""
+		
+2、将nginx添加至SELinux的白名单	
+
+	yum install policycoreutils-python
+
+	sudo cat /var/log/audit/audit.log | grep nginx | grep denied | audit2allow -M mynginx
+
+	sudo semodule -i mynginx.pp

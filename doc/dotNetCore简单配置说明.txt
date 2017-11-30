@@ -1,0 +1,20 @@
+Linux（centos7）环境下配置dotnet Core 开发及部署环境。
+
+1、注册Microsoft签名秘钥并添加Microsoft产品提要。
+	a、sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+	b、sudo sh -c 'echo -e "[packages-microsoft-com-prod]\nname=packages-microsoft-com-prod \nbaseurl= https://packages.microsoft.com/yumrepos/microsoft-rhel7.3-prod\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/dotnetdev.repo'
+2、安装 .NET SDK
+	a、sudo yum update
+	b、sudo yum install libunwind libicu
+	c、sudo yum install dotnet-sdk-2.0.2
+3、配置守护服务（Supervisor）
+	问题1：ASP.NET Core应用程序运行在shell之中，如果关闭shell则会发现ASP.NET Core应用被关闭，从而导致应用无法访问，这种情况当然是我们不想遇到的，而且生产环境对这种情况是零容忍的。
+
+	问题2：如果ASP.NET Core进程意外终止那么需要人为连进shell进行再次启动，往往这种操作都不够及时。
+
+	问题3：如果服务器宕机或需要重启我们则还是需要连入shell进行启动。
+
+	为了解决这个问题，我们需要有一个程序来监听ASP.NET Core 应用程序的状况。在应用程序停止运行的时候立即重新启动。这边我们用到了Supervisor这个工具，Supervisor使用Python开发的。
+
+
+
