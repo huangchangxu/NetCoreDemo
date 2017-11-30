@@ -6,6 +6,10 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Autofac;
+using Autofac.Extensions.DependencyInjection;
+using PaymentCenter.Infrastructure.AutofacConfig;
+using PaymentCenter.Infrastructure.MiddlewareExtensions;
 
 namespace PaymentCenter.Management
 {
@@ -19,9 +23,13 @@ namespace PaymentCenter.Management
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            // Add Autofac
+            AutoFacContainer.Build<AutoFac.ManagementModule>(services);
+            return new AutofacServiceProvider(AutoFacContainer.container);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -38,6 +46,8 @@ namespace PaymentCenter.Management
             }
 
             app.UseStaticFiles();
+
+            app.UseErrorHandling();
 
             app.UseMvc(routes =>
             {
