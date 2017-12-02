@@ -8,6 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Autofac.Extensions.DependencyInjection;
 
 namespace PaymentCenter.Api
 {
@@ -33,7 +34,6 @@ namespace PaymentCenter.Api
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseMvc();
         }
     }

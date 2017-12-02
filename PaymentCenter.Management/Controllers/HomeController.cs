@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using PaymentCenter.Management.Models;
 using PaymentCenter.Infrastructure.Tools;
 using Microsoft.AspNetCore.Hosting;
+using Autofac;
 
 namespace PaymentCenter.Management.Controllers
 {
@@ -48,6 +49,7 @@ namespace PaymentCenter.Management.Controllers
         /// <returns></returns>
         public IActionResult Login()
         {
+            throw new Exception("dadfasf");
             return View();
         }
         /// <summary>
@@ -58,7 +60,6 @@ namespace PaymentCenter.Management.Controllers
         {
             var fontPath = _host.ContentRootPath + "/wwwroot/fonts/arial.ttf";
             var codeArray = ValidateCodeTool.GetValidCodeByte(fontPath,out string code);
-            //HttpContext.Session.SetString("LoginValidateCode", code);
             return File(codeArray, @"image/png");
         }
     }
