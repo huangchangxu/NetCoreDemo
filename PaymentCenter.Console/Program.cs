@@ -17,8 +17,8 @@ namespace PaymentCenter.ConsoleApp
 
             //LogTest.InfoTest();
 
-            RSATest.Test();
-
+            //RSATest.Test();
+            Console.Write(typeof(string));
             Console.ReadLine();
         }
     }
