@@ -17,13 +17,10 @@ namespace PaymentCenter.Infrastructure.ConfigCenter
 
             RedisClientConfigurations configurations = new RedisClientConfigurations
             {
-                Url = url.Split(':')[0],
-                Port = url.Split(':')[1].ToInt(),
-                ConnectRetry = 5,
-                ConnectTimeout = 5000,
-                DefaultDatabase = 1,
+                Url = url
             };
             var client = RedisClient.GetRedisClient(configurations);
+            client.PreserveAsyncOrder = configurations.PreserveAsyncOrder;
             return client.GetSubscriber();
         }
         #region Redis发布订阅

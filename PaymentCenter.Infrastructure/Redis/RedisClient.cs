@@ -29,7 +29,7 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <summary>
         /// 默认链接串格式
         /// </summary>
-        public static readonly string DefaultConnectionStringFormat = "{0}:{1},abortConnect = false,defaultDatabase ={2},ssl = false,ConnectTimeout ={3},allowAdmin = true,connectRetry ={4}";
+        public static readonly string DefaultConnectionStringFormat = "{0},abortConnect = false,ssl = false,ConnectTimeout ={1},allowAdmin = true,connectRetry ={2}";
         /// <summary>
         /// 获取 Redis 连接对象
         /// </summary>
@@ -67,9 +67,7 @@ namespace PaymentCenter.Infrastructure.Redis
         public static IConnectionMultiplexer GetRedisClient(RedisClientConfigurations configurations)
         {
             var connectionString = string.Format(DefaultConnectionStringFormat,
-                configurations.Url,
-                configurations.Port,
-                configurations.DefaultDatabase,
+               string.Join(",", configurations.Url),
                 configurations.ConnectTimeout,
                 configurations.ConnectRetry);
             if (!ConnectionCache.ContainsKey(connectionString))

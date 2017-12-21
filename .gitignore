@@ -1,0 +1,9 @@
+/PaymentCenter.Api/obj
+/PaymentCenter.Api/bin
+/PaymentCenter.Console/obj
+/PaymentCenter.Console/bin
+/PaymentCenter.Infrastructure/bin
+/PaymentCenter.Infrastructure/obj
+/PaymentCenter.Management/bin
+/PaymentCenter.Management/obj
+/.vs

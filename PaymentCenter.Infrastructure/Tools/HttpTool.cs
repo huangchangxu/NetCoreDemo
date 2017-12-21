@@ -1,9 +1,13 @@
-﻿using System;
+﻿using PaymentCenter.Infrastructure.Extension;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
@@ -14,290 +18,336 @@ namespace PaymentCenter.Infrastructure.Tools
     /// </summary>
     public class HttpTool
     {
-        public static bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
+        #region HTTP请求方法
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="certificate"></param>
+        /// <param name="chain"></param>
+        /// <param name="errors"></param>
+        /// <returns></returns>
+        private static bool CheckValidationResult(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors errors)
         {
             //直接确认，否则打不开    
             return true;
         }
         /// <summary>
-        /// post操作 提交键值对的dic
+        /// http请求
         /// </summary>
-        /// <param name="url"></param>
+        /// <param name="url">请求地址</param>
+        /// <param name="data">请求数据</param>
+        /// <param name="isUseCert">是否使用证书</param>
+        /// <param name="certPath">证书路径</param>
+        /// <param name="certPwd">证书密码</param>
+        /// <param name="timeOut">请求超时时间</param>
+        /// <param name="method">请求方式</param>
+        /// <param name="format">请求数据格式</param>
+        /// <returns></returns>
+        public static string HttpRequest(string url, string data,HttpRequestMethod method,HttpRequestDataFormat format, bool isUseCert=false, string certPath="", string certPwd="", int timeOut=5)
+        {
+            GC.Collect();//垃圾回收，回收没有正常关闭的http连接
+
+            string result = string.Empty;//返回结果
+
+            HttpWebRequest request = null;
+            HttpWebResponse response = null;
+            Stream reqStream = null;
+
+            try
+            {
+                //最大连接数
+                ServicePointManager.DefaultConnectionLimit = 200;
+                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
+                {
+                    ServicePointManager.ServerCertificateValidationCallback =
+                        new RemoteCertificateValidationCallback(CheckValidationResult);
+                }
+
+                request = (HttpWebRequest)WebRequest.Create(url);
+                request.Timeout = 1000 * timeOut;
+
+
+                request.Method = method.ToString().ToUpper();
+
+                if (isUseCert)
+                {
+                    X509Certificate2 certificate2 = new X509Certificate2(certPath, certPwd);
+                    request.ClientCertificates.Add(certificate2);
+                }
+
+                if (method == HttpRequestMethod.POST)
+                {
+                    request.Method = "POST";
+                    switch (format)
+                    {
+                        case HttpRequestDataFormat.Form:
+                            request.ContentType = "application/x-www-form-urlencoded";
+                            break;
+                        case HttpRequestDataFormat.Json:
+                            request.ContentType = "application/json";
+                            break;
+                        default:
+                            throw new InvalidCastException("请求数据格式无效");
+                    }
+                    var postData = Encoding.UTF8.GetBytes(data);
+                    request.ContentLength = postData.Length;
+                    //写入数据
+                    reqStream = request.GetRequestStream();
+                    reqStream.Write(postData, 0, postData.Length);
+                    reqStream.Close();
+                }
+                else
+                    request.Method = "GET";
+
+                //获取服务端返回结果
+                response = (HttpWebResponse)request.GetResponse();
+
+                //获取服务端返回数据
+                StreamReader reader = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
+                result = reader.ReadToEnd().Trim();
+                reader.Close();
+            }
+            catch (Exception ex)
+            {
+                if (ex is System.Threading.ThreadAbortException)
+                    System.Threading.Thread.ResetAbort();
+
+                throw ex;
+            }
+            finally
+            {
+                response?.Close();
+                request?.Abort();
+            }
+            return result;
+        }
+        /// <summary>
+        /// http请求
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="url">请求地址</param>
+        /// <param name="data">请求数据</param>
+        /// <param name="isUseCert">是否使用证书</param>
+        /// <param name="certPath">证书路径</param>
+        /// <param name="certPwd">证书密码</param>
+        /// <param name="timeOut">请求超时时间</param>
+        /// <param name="method">请求方式</param>
+        /// <param name="format">请求数据格式</param>
+        /// <returns></returns>
+        public static string HttpRequest<T>(string url, T data, HttpRequestMethod method, HttpRequestDataFormat format, bool isUseCert = false, string certPath = "", string certPwd = "", int timeOut = 5)
+        {
+            var strData = string.Empty;
+            if (format == HttpRequestDataFormat.Json)
+                strData = data.ToJson();
+            else
+            {
+                if (data is IDictionary<string, object>)
+                    (data as IDictionary<string, object>).ToHttpFormData();
+                else if (data is IList)
+                    (data as IList<object>).ToHttFormData();
+                else if (data is string)
+                    strData = data as string;
+                else
+                {
+                    List<string> list = new List<string>();
+                    var dic = data.GetType().GetProperties().ToDictionary(p => p.Name, p => p.GetValue(data) == null ? "" : p.GetValue(data).ToString());
+                    foreach (var item in dic)
+                    {
+                        list.Add($"{item.Key}={System.Web.HttpUtility.UrlEncode(item.Value)}");
+                    }
+                    strData = $"{string.Join("&", list)}";
+                }
+            }
+
+            return HttpRequest(url, strData, method, format, isUseCert, certPath, certPwd, timeOut);
+        }
+        /// <summary>
+        /// 签名加密Http请求方式
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data">请求数据</param>
+        /// <param name="url">请求地址</param>
+        /// <param name="isDES">是否加密</param>
+        /// <param name="timeOut">超时时间</param>
+        /// <param name="method">请求方式（GET,POST）</param>
+        /// <returns></returns>
+        public static string HttpDshlAuthRequest<T>(T data, string url, bool isDES = false, HttpRequestMethod method = HttpRequestMethod.POST, int timeOut = 5)
+        {
+            string json = string.Empty;
+            if (data != null)
+            {
+                if (typeof(T) == typeof(string))
+                    json = data as string;
+                else
+                    json = data.ToJson();
+            }
+            else
+                json = string.Empty;
+
+            var desResult = GetDataAuth(json, isDES);
+
+            var strHttpResult = HttpRequest($"{url}?{desResult.Item2}", desResult.Item1, method, HttpRequestDataFormat.Json);
+            return strHttpResult;
+        }
+        #endregion
+
+        #region 数据加密基础方法
+        /// <summary>
+        /// 加密
+        /// </summary>
+        /// <param name="plaintextBuffer">明文</param>
+        /// <returns></returns>
+        private static string Encryption(string key, byte[] iv, byte[] plaintextBuffer)
+        {
+            ICryptoTransform transform = GetTripleDES(key, iv).CreateEncryptor();
+            byte[] cipherTextBuffer = transform.TransformFinalBlock(plaintextBuffer, 0, plaintextBuffer.Length);
+            transform.Dispose();
+            return Convert.ToBase64String(cipherTextBuffer);
+        }
+
+        /// <summary>
+        /// 解密
+        /// </summary>
+        /// <param name="key">密匙</param>
+        /// <param name="iv">IV向量</param>
+        /// <param name="cipherTextBuffer">密文</param>
+        /// <returns></returns>
+        private static string Decryption(string key, byte[] iv, byte[] cipherTextBuffer)
+        {
+            ICryptoTransform transform = GetTripleDES(key, iv).CreateDecryptor();
+            byte[] decryption = transform.TransformFinalBlock(cipherTextBuffer, 0, cipherTextBuffer.Length);
+            transform.Dispose();
+            return Encoding.UTF8.GetString(decryption);
+        }
+
+        private static TripleDESCryptoServiceProvider GetTripleDES(string key, byte[] iv)
+        {
+            TripleDESCryptoServiceProvider tripleDES = new TripleDESCryptoServiceProvider
+            {
+                Mode = CipherMode.CBC,
+                Padding = PaddingMode.PKCS7
+            };
+            //key不能直接用，应该先转换成散列
+            //MD5CryptoServiceProvider hashmd5 = new MD5CryptoServiceProvider();
+            //byte[] tdesKey = hashmd5.ComputeHash(Encoding.UTF8.GetBytes(key));
+            //与java一致
+            var key24 = new byte[24];
+            Array.Copy(Encoding.UTF8.GetBytes(key), key24, 24);
+            tripleDES.Key = key24;
+            tripleDES.IV = iv;
+            return tripleDES;
+        }
+
+        #endregion
+
+        #region 店商加密方法
+        private static string DataKey = ConfigCenter.ConfigCenterHelper.GetInstance().Get("Maticsoft.DS365.Security.dataKey");
+        private static string Appkey = ConfigCenter.ConfigCenterHelper.GetInstance().Get("Maticsoft.DS365.Security.appkey");
+        private static string AuthVer = ConfigCenter.ConfigCenterHelper.GetInstance().Get("Maticsoft.DS365.Security.auth_ver");
+        private static string Appsecret = ConfigCenter.ConfigCenterHelper.GetInstance().Get("Maticsoft.DS365.Security.appsecret");
+        /// <summary>
+        /// 数据加密
+        /// </summary>
+        /// <param name="dataKey">加密key</param>
+        /// <param name="data">body域</param>
+        /// <returns></returns>
+        private static SecretMetaData DataEcryption(string dataKey, string data)
+        {
+            long timeStamp = CommonTools.GetTimeStamp();
+            long iv = timeStamp + 1;
+            //1.加密
+            string dataChiperText = Encryption(dataKey, Encoding.UTF8.GetBytes(iv.ToString().Substring(2, 8)), Encoding.UTF8.GetBytes(data));
+            //3.返回数据
+            return new SecretMetaData { createTime = timeStamp, msg = dataChiperText };
+        }
+        /// <summary>
+        /// 生成 数据完整性的checkStr 【需要在数据域处理完成后】
+        /// </summary>
+        /// <param name="data">post数据域</param>
+        /// <param name="appkey"></param>
+        /// <returns></returns>
+        private static string BuilderDataIntegrityStr(string data, string appkey)
+        {
+            if (!string.IsNullOrEmpty(data))
+            {
+                if (data.Length > 50)
+                {
+                    data = data.Substring(0, 50);
+                }
+            }
+            MD5 md5 = MD5.Create();
+            var md5Value = md5.ComputeHash(Encoding.UTF8.GetBytes(data + appkey));
+            string localCheckStr = BitConverter.ToString(md5Value).Replace("-", "").ToLower();
+            return localCheckStr;
+        }
+        /// <summary>
+        /// 生成数据认证签名
+        /// </summary>
+        /// <param name="appsecret">认证key：a63bab826e87f1276c26ae9feedd1622</param>
+        /// <param name="paramsNV">url参数</param>
+        /// <param name="signName">url参数 签名生成字段名 s</param>
+        /// <returns></returns>
+        private static string MakeDataAuthenticationSign(string appsecret, Dictionary<string, string> paramsNV)
+        {
+            StringBuilder sb = new StringBuilder();
+            //1.参数排序
+            SortedDictionary<string, string> sortDict = new SortedDictionary<string, string>(paramsNV);
+            //2.拼凑
+            foreach (var item in sortDict)
+            {
+                sb.Append(item.Key + item.Value);
+            }
+            sb.Append(appsecret);
+
+            //3.签名
+            var md5 = MD5.Create();
+            byte[] md5Value = md5.ComputeHash(Encoding.UTF8.GetBytes(sb.ToString()));
+            var sign = BitConverter.ToString(md5Value).Replace("-", "").ToLower();
+            return sign;
+        }
+        /// <summary>
+        /// 获取请求信息
+        /// </summary>
         /// <param name="param"></param>
         /// <returns></returns>
-        public static string Post(string url, Dictionary<string, string> param)
+        public static Tuple<string, string> GetDataAuth(string json, bool DES = false)
         {
-            var content = new FormUrlEncodedContent(param);
-            //此处未来需要添加HttpClient连接池,复用连接
-            using (var client = new HttpClient())
+            string chkStr = string.Empty;
+            SecretMetaData msg = null;
+            if (DES)
             {
-                var result = client.PostAsync(url, content).Result;
-                string resultContent = result.Content.ReadAsStringAsync().Result;
-                return resultContent;
+                msg = DataEcryption(DataKey, json);
+                chkStr = msg.ToJson();
             }
+            else
+                chkStr = json;
+
+            var checkStr = BuilderDataIntegrityStr(chkStr, Appkey);
+
+            var tSpan = msg == null ? CommonTools.GetTimeStamp() : msg.createTime;
+            var md5 = MD5.Create();
+            var md5Value = md5.ComputeHash(Encoding.UTF8.GetBytes(tSpan.ToString()));
+            var tk = BitConverter.ToString(md5Value).Replace("-", "").ToLower();
+            var dic = new Dictionary<string, string>
+            {
+                {"tk", tk},
+                {"appkey", Appkey},
+                {"checkStr", checkStr},
+                {"auth_ver", AuthVer},
+                {"nonce",tSpan.ToString()}
+            };
+            var s = MakeDataAuthenticationSign(Appsecret, dic);
+            dic.Add("s", s);
+            //是否传输密文
+            if (DES)
+                return Tuple.Create(msg.ToJson(), string.Join("&", dic.Select(item => $"{item.Key}={item.Value}")));
+            else
+                return Tuple.Create(json, string.Join("&", dic.Select(item => $"{item.Key}={item.Value}")));
         }
-        /// <summary>
-        /// post操作提交json
-        /// </summary>
-        /// <param name="requestUrl"></param>
-        /// <param name="jsonParas"></param>
-        /// <returns></returns>
-        public static string GetHttpPost(string requestUrl, string jsonParas)
-        {
-            return GetHttpPost(jsonParas, requestUrl, false, 5);
-        }
-        /// <summary>
-        /// 处理Post请求
-        /// </summary>
-        /// <param name="json">json格式数据</param>
-        /// <param name="url">请求Api的Url的链接</param>
-        /// <param name="isUseCert">是否使用证书</param>
-        /// <param name="timeout">请求超时时间（秒）</param>
-        /// <returns></returns>
-        public static string GetHttpPost(string json, string url, bool isUseCert, int timeout)
-        {
+        #endregion
 
-            System.GC.Collect();//垃圾回收，回收没有正常关闭的http连接
-
-            string result = "";//返回结果
-
-            HttpWebRequest request = null;
-            HttpWebResponse response = null;
-            Stream reqStream = null;
-
-            try
-            {
-                //设置最大连接数
-                ServicePointManager.DefaultConnectionLimit = 200;
-                //设置https验证方式
-                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-                {
-                    ServicePointManager.ServerCertificateValidationCallback =
-                            new RemoteCertificateValidationCallback(CheckValidationResult);
-                }
-
-                /***************************************************************
-                * 下面设置HttpWebRequest的相关属性
-                * ************************************************************/
-                request = (HttpWebRequest)WebRequest.Create(url);
-
-                request.Method = "POST";
-                request.Timeout = timeout * 1000;
-
-                //设置POST的数据类型和长度
-                request.ContentType = "application/json";
-                byte[] data = Encoding.UTF8.GetBytes(json);
-                request.ContentLength = data.Length;
-
-                //往服务器写入数据
-                reqStream = request.GetRequestStream();
-                reqStream.Write(data, 0, data.Length);
-                reqStream.Close();
-
-                //获取服务端返回
-                response = (HttpWebResponse)request.GetResponse();
-
-                //获取服务端返回数据
-                StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                result = sr.ReadToEnd().Trim();
-                sr.Close();
-            }
-            catch (System.Threading.ThreadAbortException e)
-            {
-                System.Threading.Thread.ResetAbort();
-            }
-            catch (WebException e)
-            {
-                if (e.Status == WebExceptionStatus.ProtocolError)
-                {
-                }
-            }
-            catch (Exception e)
-            {
-            }
-            finally
-            {
-                //关闭连接和流
-                response?.Close();
-                request?.Abort();
-            }
-            return result;
-        }
-        /// <summary>
-        /// 使用 X509证书提交数据
-        /// </summary>
-        /// <param name="json"></param>
-        /// <param name="url"></param>
-        /// <param name="certPath"></param>
-        /// <param name="certPwd"></param>
-        /// <param name="timeout"></param>
-        /// <returns></returns>
-        public static string GetHttpPostUseCert(string json, string url, string certPath, string certPwd, int timeout)
-        {
-
-            System.GC.Collect();//垃圾回收，回收没有正常关闭的http连接
-
-            string result = "";//返回结果
-
-            HttpWebRequest request = null;
-            HttpWebResponse response = null;
-            Stream reqStream = null;
-            try
-            {
-                //设置最大连接数
-                ServicePointManager.DefaultConnectionLimit = 200;
-                //设置https验证方式
-                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-                {
-                    ServicePointManager.ServerCertificateValidationCallback =
-                            new RemoteCertificateValidationCallback(CheckValidationResult);
-                }
-
-                /***************************************************************
-                * 下面设置HttpWebRequest的相关属性
-                * ************************************************************/
-                request = (HttpWebRequest)WebRequest.Create(url);
-
-                request.Method = "POST";
-                request.Timeout = timeout * 1000;
-
-                //设置POST的数据类型和长度
-                request.ContentType = "application/json";
-                byte[] data = System.Text.Encoding.UTF8.GetBytes(json);
-                request.ContentLength = data.Length;
-
-
-                X509Certificate2 cert = new X509Certificate2(certPath, certPwd);
-                request.ClientCertificates.Add(cert);
-
-                //往服务器写入数据
-                reqStream = request.GetRequestStream();
-                reqStream.Write(data, 0, data.Length);
-                reqStream.Close();
-
-                //获取服务端返回
-                response = (HttpWebResponse)request.GetResponse();
-
-                //获取服务端返回数据
-                StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                result = sr.ReadToEnd().Trim();
-                sr.Close();
-            }
-            catch (System.Threading.ThreadAbortException e)
-            {
-                System.Threading.Thread.ResetAbort();
-            }
-            catch (WebException e)
-            {
-                if (e.Status == WebExceptionStatus.ProtocolError)
-                {
-                }
-            }
-            catch (Exception e)
-            {
-            }
-            finally
-            {
-                //关闭连接和流
-                response?.Close();
-                request?.Abort();
-            }
-            return result;
-        }
-
-        /// <summary>
-        /// 处理http GET请求，返回数据
-        /// </summary>
-        /// <param name="url">请求的url地址</param>
-        /// <returns>http GET成功后返回的数据，失败抛WebException异常</returns>
-        public static string Get(string url)
-        {
-            System.GC.Collect();
-            string result = "";
-
-            HttpWebRequest request = null;
-            HttpWebResponse response = null;
-
-            //请求url以获取数据
-            try
-            {
-                //设置最大连接数
-                ServicePointManager.DefaultConnectionLimit = 200;
-                //设置https验证方式
-                if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-                {
-                    ServicePointManager.ServerCertificateValidationCallback =
-                            new RemoteCertificateValidationCallback(CheckValidationResult);
-                }
-
-                /***************************************************************
-                * 下面设置HttpWebRequest的相关属性
-                * ************************************************************/
-                request = (HttpWebRequest)WebRequest.Create(url);
-
-                request.Method = "GET";
-
-                //获取服务器返回
-                response = (HttpWebResponse)request.GetResponse();
-
-                //获取HTTP返回数据
-                StreamReader sr = new StreamReader(response.GetResponseStream(), Encoding.UTF8);
-                result = sr.ReadToEnd().Trim();
-                sr.Close();
-            }
-            catch (System.Threading.ThreadAbortException e)
-            {
-                System.Threading.Thread.ResetAbort();
-                throw e;
-            }
-            catch (WebException e)
-            {
-                if (e.Status == WebExceptionStatus.ProtocolError)
-                {
-                }
-            }
-            catch (Exception e)
-            {
-            }
-            finally
-            {
-                //关闭连接和流
-                if (response != null)
-                {
-                    response.Close();
-                }
-                if (request != null)
-                {
-                    request.Abort();
-                }
-            }
-            return result;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="data"></param>
-        /// <param name="url"></param>
-        /// <returns></returns>
-        public static string FormPost(string data, string url)
-        {
-            string postString = data;//这里即为传递的参数，可以用工具抓包分析，也可以自己分析，主要是form里面每一个name都要加进来
-            byte[] postData = Encoding.UTF8.GetBytes(postString);//编码，尤其是汉字，事先要看下抓取网页的编码方式
-            WebClient webClient = new WebClient();
-            //设置最大连接数
-            ServicePointManager.DefaultConnectionLimit = 200;
-            //设置https验证方式
-            if (url.StartsWith("https", StringComparison.OrdinalIgnoreCase))
-            {
-                ServicePointManager.ServerCertificateValidationCallback =
-                        new RemoteCertificateValidationCallback(CheckValidationResult);
-            }
-            webClient.Headers.Add("Content-Type", "application/x-www-form-urlencoded");//采取POST方式必须加的header，如果改为GET方式的话就去掉这句话即可
-            byte[] responseData = webClient.UploadData(url, "POST", postData);//得到返回字符流
-            string srcString = Encoding.UTF8.GetString(responseData);//解码
-            return srcString;
-        }
-
+        #region HTTP下载文件
         /// <summary>
         /// Http下载文件支持断点续传
         /// </summary>
@@ -442,5 +492,49 @@ namespace PaymentCenter.Infrastructure.Tools
                 return false;
             }
         }
+        #endregion
+    }
+
+    /// <summary>
+    /// 加密请求数据
+    /// </summary>
+    public sealed class SecretMetaData
+    {
+        /// <summary>
+        /// 消息主体
+        /// </summary>
+        public string msg { get; set; }
+        /// <summary>
+        /// 时间 iv向量 10位+1  后8位
+        /// </summary>
+        public long createTime { get; set; }
+    }
+    /// <summary>
+    /// 请求方式
+    /// </summary>
+    public enum HttpRequestMethod
+    {
+        /// <summary>
+        /// Get
+        /// </summary>
+        GET = 1,
+        /// <summary>
+        /// POST
+        /// </summary>
+        POST = 2
+    }
+    /// <summary>
+    /// 请求数据格式
+    /// </summary>
+    public enum HttpRequestDataFormat
+    {
+        /// <summary>
+        /// form表单键值对（key&value）
+        /// </summary>
+        Form = 1,
+        /// <summary>
+        /// Json格式
+        /// </summary>
+        Json = 2
     }
 }

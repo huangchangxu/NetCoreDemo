@@ -16,11 +16,6 @@ namespace PaymentCenter.Infrastructure.ConfigCenter
     {
         public T GetAppSettings<T>(string key) where T : class, new()
         {
-            var baseDir = AppContext.BaseDirectory;
-            var indexSrc = baseDir.IndexOf("src");
-            var subToSrc = baseDir.Substring(0, indexSrc);
-            var currentClassDir = subToSrc + "src" + Path.DirectorySeparatorChar + "StutdyEFCore.Data";
-
             IConfiguration config = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
                 .Add(new JsonConfigurationSource { Path = "appsettings.json", Optional = false, ReloadOnChange = true })

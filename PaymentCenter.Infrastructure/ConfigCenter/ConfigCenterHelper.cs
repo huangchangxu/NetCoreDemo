@@ -19,7 +19,7 @@ namespace PaymentCenter.Infrastructure.ConfigCenter
     /// </summary>
     public class ConfigCenterHelper
     {
-        private static string ConfigUrl => "";
+        private static string ConfigUrl => ApplicationConfigHelper.AppSettings.AppSettings.ConfigCenterUrl;
         private static string _oldResult = string.Empty;
 
         private Dictionary<string, string> ConfigDictionary { get; set; }
@@ -138,7 +138,7 @@ namespace PaymentCenter.Infrastructure.ConfigCenter
             Dictionary<string, string> list = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             //本地配置文件
-            string localcachejsonpath = AppDomain.CurrentDomain.BaseDirectory.Trim('\\') + "\\" + "temp\\" + "config.localcache.json";
+            string localcachejsonpath = Directory.GetCurrentDirectory().Trim('\\') + "\\" + "temp\\" + "config.localcache.json";
             for (int i = 0; i < 3; i++)
             {
                 try
@@ -146,7 +146,7 @@ namespace PaymentCenter.Infrastructure.ConfigCenter
                     var result1 = "";
                     using (HttpClient client = new HttpClient())
                     {
-                        result1 = client.PostAsync(ConfigUrl, new StringContent("")).Result.Content.ReadAsStringAsync().Result;
+                        result1 = client.PostAsync(ConfigUrl.TryReplace("|","&"), new StringContent("")).Result.Content.ReadAsStringAsync().Result;
                     }
                     if (!string.IsNullOrWhiteSpace(result1))
                     {

@@ -18,12 +18,7 @@ namespace PaymentCenter.ConsoleApp
 
             RedisClientConfigurations configurations = new RedisClientConfigurations
             {
-                Url = "127.0.0.1",
-                Port = 6379,
-                ConnectRetry = 5,
-                ConnectTimeout = 5000,
-                DefaultDatabase = 1,
-                DefaultKey = "DSHLTest"
+                Url = "127.0.0.1:6379",
             };
             RedisHelper.StringSet("Model_test", configurations);
             var json = RedisHelper.StringGet<RedisClientConfigurations>("Model_test");
