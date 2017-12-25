@@ -19,7 +19,9 @@ namespace PaymentCenter.ConsoleApp
 
             //RSATest.Test();
 
-            ConfigTest.ConfigCenterGetTest();
+            //ConfigTest.ConfigCenterGetTest();
+
+            ESTest.Add();
 
             Console.ReadLine();
         }
