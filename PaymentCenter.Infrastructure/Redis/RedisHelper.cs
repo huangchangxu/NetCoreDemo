@@ -10,44 +10,44 @@ namespace PaymentCenter.Infrastructure.Redis
 {
     public class RedisHelper
     {
-        private static IDatabase _db;
-        private static ISubscriber _sub;
-        private static string defaultKey;
-
-        static RedisHelper()
+        /// <summary>
+        /// 创建redis链接
+        /// </summary>
+        /// <param name="dbNum"></param>
+        /// <param name="defaultKey"></param>
+        /// <param name="redisUri"></param>
+        /// <returns></returns>
+        public static IDatabase GetDatabase(int dbNum = 0, string redisUri = "")
         {
-            RedisClientConfigurations configurations = new RedisClientConfigurations
-            {
-                Url = "192.168.2.8",
-                Port = 7379,
-                ConnectRetry = 5,
-                ConnectTimeout = 5000,
-                DefaultDatabase = 1,
-                DefaultKey = "DSHLTest"
-            };
-            var client = RedisClient.GetRedisClient(configurations);
+            var config = new RedisClientConfigurations { Url = redisUri };
+            var client = RedisClient.GetRedisClient(config);
             if (client.IsConnected)
             {
-                _db = client.GetDatabase();
-                _sub = client.GetSubscriber();
-                client.PreserveAsyncOrder = configurations.PreserveAsyncOrder;
-                defaultKey = configurations.DefaultKey;
+                return client.GetDatabase(db: dbNum);
             }
             else
-                throw new ArgumentNullException("RedisHelper.client", $"Redis未能成功连接。连接配置为{configurations.ToJson()}");
+            {
+                throw new ArgumentException("RedisHelper.client", $"Redis未能成功连接。连接配置为{config.ToJson()}");
+            }
         }
-
         /// <summary>
-        /// 添加 Key 的前缀
+        /// 创建redis订阅链接
         /// </summary>
-        /// <param name="key"></param>
+        /// <param name="redisUri"></param>
         /// <returns></returns>
-        private static string AddKeyPrefix(string key)
+        public static ISubscriber GetSubscriber(string redisUri = "")
         {
-            if (defaultKey.IsNullOrEmpty())
-                return key;
+            var config = new RedisClientConfigurations { Url = redisUri };
+            var client = RedisClient.GetRedisClient(config);
+            if (client.IsConnected)
+            {
+                client.PreserveAsyncOrder = config.PreserveAsyncOrder;
+                return client.GetSubscriber();
+            }
             else
-                return $"{defaultKey}:{key}";
+            {
+                throw new ArgumentException("RedisHelper.client", $"Redis订阅未能成功连接。连接配置为{config.ToJson()}");
+            }
         }
 
         /// <summary>
@@ -70,23 +70,26 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <param name="expiry"></param>
+        /// <param name="dbNum"></param>
+        /// <param name="redisUrl"></param>
         /// <returns></returns>
-        public static bool StringSet(string redisKey, string redisValue, TimeSpan? expiry = null)
+        public static bool StringSet(string redisKey, string redisValue, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.StringSet(redisKey, redisValue, expiry);
+            var db = GetDatabase(dbNum, redisUrl);
+            return db.StringSet(redisKey, redisValue, expiry);
         }
 
         /// <summary>
         /// 保存多个 Key-value
         /// </summary>
         /// <param name="keyValuePairs"></param>
+        /// <param name="dbNum"></param>
+        /// <param name="redisUrl"></param>
         /// <returns></returns>
-        public static bool StringSet(IEnumerable<KeyValuePair<RedisKey, RedisValue>> keyValuePairs)
+        public static bool StringSet(IEnumerable<KeyValuePair<RedisKey, RedisValue>> keyValuePairs, int dbNum = 0, string redisUrl = "")
         {
-            keyValuePairs =
-                keyValuePairs.Select(x => new KeyValuePair<RedisKey, RedisValue>(AddKeyPrefix(x.Key), x.Value));
-            return _db.StringSet(keyValuePairs.ToArray());
+            var db = GetDatabase(dbNum, redisUrl);
+            return db.StringSet(keyValuePairs.ToArray());
         }
 
         /// <summary>
@@ -94,11 +97,13 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <param name="expiry"></param>
+        /// <param name="dbNum"></param>
+        /// <param name="redisUrl"></param>
         /// <returns></returns>
-        public static string StringGet(string redisKey, TimeSpan? expiry = null)
+        public static string StringGet(string redisKey, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.StringGet(redisKey);
+            var db = GetDatabase(dbNum, redisUrl);
+            return db.StringGet(redisKey);
         }
 
         /// <summary>
@@ -107,11 +112,13 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <param name="expiry"></param>
+        /// <param name="dbNum"></param>
+        /// <param name="redisUrl"></param>
         /// <returns></returns>
-        public static bool StringSet<T>(string redisKey, T redisValue, TimeSpan? expiry = null)
+        public static bool StringSet<T>(string redisKey, T redisValue, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.StringSet(redisKey, redisValue.ToJson(), expiry);
+            var db = GetDatabase(dbNum, redisUrl);
+            return db.StringSet(redisKey, redisValue.ToJson(), expiry);
         }
 
         /// <summary>
@@ -119,11 +126,12 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <param name="expiry"></param>
+        /// <param name="dbNum"></param>
+        /// <param name="redisUrl"></param>
         /// <returns></returns>
-        public static T StringGet<T>(string redisKey, TimeSpan? expiry = null)
+        public static T StringGet<T>(string redisKey, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value = _db.StringGet(redisKey);
+            var value = GetDatabase(dbNum, redisUrl).StringGet(redisKey);
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -139,10 +147,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisValue"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public async Task<bool> StringSetAsync(string redisKey, string redisValue, TimeSpan? expiry = null)
+        public async Task<bool> StringSetAsync(string redisKey, string redisValue, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.StringSetAsync(redisKey, redisValue, expiry);
+            return await GetDatabase(dbNum, redisUrl).StringSetAsync(redisKey, redisValue, expiry);
         }
 
         /// <summary>
@@ -150,11 +157,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="keyValuePairs"></param>
         /// <returns></returns>
-        public async Task<bool> StringSetAsync(IEnumerable<KeyValuePair<RedisKey, RedisValue>> keyValuePairs)
+        public async Task<bool> StringSetAsync(IEnumerable<KeyValuePair<RedisKey, RedisValue>> keyValuePairs, int dbNum = 0, string redisUrl = "")
         {
-            keyValuePairs =
-                keyValuePairs.Select(x => new KeyValuePair<RedisKey, RedisValue>(AddKeyPrefix(x.Key), x.Value));
-            return await _db.StringSetAsync(keyValuePairs.ToArray());
+            return await GetDatabase(dbNum, redisUrl).StringSetAsync(keyValuePairs.ToArray());
         }
 
         /// <summary>
@@ -164,10 +169,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisValue"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public async Task<string> StringGetAsync(string redisKey, string redisValue, TimeSpan? expiry = null)
+        public async Task<string> StringGetAsync(string redisKey, string redisValue, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.StringGetAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).StringGetAsync(redisKey);
         }
 
         /// <summary>
@@ -177,10 +181,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisValue"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public async Task<bool> StringSetAsync<T>(string redisKey, T redisValue, TimeSpan? expiry = null)
+        public async Task<bool> StringSetAsync<T>(string redisKey, T redisValue, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.StringSetAsync(redisKey, redisValue.ToJson(), expiry);
+            return await GetDatabase(dbNum, redisUrl).StringSetAsync(redisKey, redisValue.ToJson(), expiry);
         }
 
         /// <summary>
@@ -189,10 +192,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public async Task<T> StringGetAsync<T>(string redisKey, TimeSpan? expiry = null)
+        public async Task<T> StringGetAsync<T>(string redisKey, TimeSpan? expiry = null, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value = await _db.StringGetAsync(redisKey);
+            var value = await GetDatabase(dbNum, redisUrl).StringGetAsync(redisKey);
             return value.ToString().FromJson<T>();
         }
 
@@ -208,10 +210,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static bool HashExists(string redisKey, string hashField)
+        public static bool HashExists(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.HashExists(redisKey, hashField);
+            return GetDatabase(dbNum, redisUrl).HashExists(redisKey, hashField);
         }
 
         /// <summary>
@@ -220,10 +221,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static bool HashDelete(string redisKey, string hashField)
+        public static bool HashDelete(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.HashDelete(redisKey, hashField);
+            return GetDatabase(dbNum, redisUrl).HashDelete(redisKey, hashField);
         }
 
         /// <summary>
@@ -232,12 +232,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashFields"></param>
         /// <returns></returns>
-        public static long HashDelete(string redisKey, IEnumerable<string> hashFields)
+        public static long HashDelete(string redisKey, IEnumerable<string> hashFields, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
             var fields = hashFields.Select(x => (RedisValue)x);
-
-            return _db.HashDelete(redisKey, fields.ToArray());
+            return GetDatabase(dbNum, redisUrl).HashDelete(redisKey, fields.ToArray());
         }
 
         /// <summary>
@@ -247,10 +245,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="hashField"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static bool HashSet(string redisKey, string hashField, string value)
+        public static bool HashSet(string redisKey, string hashField, string value, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.HashSet(redisKey, hashField, value);
+            return GetDatabase(dbNum, redisUrl).HashSet(redisKey, hashField, value);
         }
 
         /// <summary>
@@ -258,12 +255,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <param name="hashFields"></param>
-        public static void HashSet(string redisKey, IEnumerable<KeyValuePair<string, string>> hashFields)
+        public static void HashSet(string redisKey, IEnumerable<KeyValuePair<string, string>> hashFields, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
             var entries = hashFields.Select(x => new HashEntry(x.Key, x.Value));
-
-            _db.HashSet(redisKey, entries.ToArray());
+            GetDatabase(dbNum, redisUrl).HashSet(redisKey, entries.ToArray());
         }
 
         /// <summary>
@@ -272,10 +267,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static string HashGet(string redisKey, string hashField)
+        public static string HashGet(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.HashGet(redisKey, hashField);
+            return GetDatabase(dbNum, redisUrl).HashGet(redisKey, hashField);
         }
 
         /// <summary>
@@ -284,12 +278,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashFields"></param>
         /// <returns></returns>
-        public static IEnumerable<string> HashGet(string redisKey, IEnumerable<string> hashFields)
+        public static IEnumerable<string> HashGet(string redisKey, IEnumerable<string> hashFields, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
             var fields = hashFields.Select(x => (RedisValue)x);
-
-            return ConvertStrings(_db.HashGet(redisKey, fields.ToArray()));
+            return ConvertStrings(GetDatabase(dbNum, redisUrl).HashGet(redisKey, fields.ToArray()));
         }
 
         /// <summary>
@@ -297,10 +289,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static IEnumerable<string> HashKeys(string redisKey)
+        public static IEnumerable<string> HashKeys(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return ConvertStrings(_db.HashKeys(redisKey));
+            return ConvertStrings(GetDatabase(dbNum, redisUrl).HashKeys(redisKey));
         }
 
         /// <summary>
@@ -308,10 +299,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static IEnumerable<string> HashValues(string redisKey)
+        public static IEnumerable<string> HashValues(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return ConvertStrings(_db.HashValues(redisKey));
+            return ConvertStrings(GetDatabase(dbNum, redisUrl).HashValues(redisKey));
         }
 
         /// <summary>
@@ -321,10 +311,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="hashField"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static bool HashSet<T>(string redisKey, string hashField, T redisValue)
+        public static bool HashSet<T>(string redisKey, string hashField, T redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.HashSet(redisKey, hashField, redisValue.ToJson());
+            return GetDatabase(dbNum, redisUrl).HashSet(redisKey, hashField, redisValue.ToJson());
         }
 
         /// <summary>
@@ -333,10 +322,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static T HashGet<T>(string redisKey, string hashField)
+        public static T HashGet<T>(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value = _db.HashGet(redisKey, hashField);
+            var value = GetDatabase(dbNum, redisUrl).HashGet(redisKey, hashField);
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -351,10 +339,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static async Task<bool> HashExistsAsync(string redisKey, string hashField)
+        public static async Task<bool> HashExistsAsync(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.HashExistsAsync(redisKey, hashField);
+            return await GetDatabase(dbNum, redisUrl).HashExistsAsync(redisKey, hashField);
         }
 
         /// <summary>
@@ -363,10 +350,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static async Task<bool> HashDeleteAsync(string redisKey, string hashField)
+        public static async Task<bool> HashDeleteAsync(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.HashDeleteAsync(redisKey, hashField);
+            return await GetDatabase(dbNum, redisUrl).HashDeleteAsync(redisKey, hashField);
         }
 
         /// <summary>
@@ -375,12 +361,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashFields"></param>
         /// <returns></returns>
-        public static async Task<long> HashDeleteAsync(string redisKey, IEnumerable<string> hashFields)
+        public static async Task<long> HashDeleteAsync(string redisKey, IEnumerable<string> hashFields, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
             var fields = hashFields.Select(x => (RedisValue)x);
-
-            return await _db.HashDeleteAsync(redisKey, fields.ToArray());
+            return await GetDatabase(dbNum, redisUrl).HashDeleteAsync(redisKey, fields.ToArray());
         }
 
         /// <summary>
@@ -390,10 +374,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="hashField"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static async Task<bool> HashSetAsync(string redisKey, string hashField, string value)
+        public static async Task<bool> HashSetAsync(string redisKey, string hashField, string value, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.HashSetAsync(redisKey, hashField, value);
+            return await GetDatabase(dbNum, redisUrl).HashSetAsync(redisKey, hashField, value);
         }
 
         /// <summary>
@@ -401,11 +384,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <param name="hashFields"></param>
-        public static async Task HashSetAsync(string redisKey, IEnumerable<KeyValuePair<string, string>> hashFields)
+        public static async Task HashSetAsync(string redisKey, IEnumerable<KeyValuePair<string, string>> hashFields, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var entries = hashFields.Select(x => new HashEntry(AddKeyPrefix(x.Key), x.Value));
-            await _db.HashSetAsync(redisKey, entries.ToArray());
+            var entries = hashFields.Select(x => new HashEntry(x.Key, x.Value));
+            await GetDatabase(dbNum, redisUrl).HashSetAsync(redisKey, entries.ToArray());
         }
 
         /// <summary>
@@ -414,10 +396,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static async Task<string> HashGetAsync(string redisKey, string hashField)
+        public static async Task<string> HashGetAsync(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.HashGetAsync(redisKey, hashField);
+            return await GetDatabase(dbNum, redisUrl).HashGetAsync(redisKey, hashField);
         }
 
         /// <summary>
@@ -428,12 +409,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="value"></param>
         /// <returns></returns>
         public static async Task<IEnumerable<string>> HashGetAsync(string redisKey, IEnumerable<string> hashFields,
-            string value)
+            string value, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
             var fields = hashFields.Select(x => (RedisValue)x);
-
-            return ConvertStrings(await _db.HashGetAsync(redisKey, fields.ToArray()));
+            return ConvertStrings(await GetDatabase(dbNum, redisUrl).HashGetAsync(redisKey, fields.ToArray()));
         }
 
         /// <summary>
@@ -441,10 +420,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<string>> HashKeysAsync(string redisKey)
+        public static async Task<IEnumerable<string>> HashKeysAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return ConvertStrings(await _db.HashKeysAsync(redisKey));
+            return ConvertStrings(await GetDatabase(dbNum, redisUrl).HashKeysAsync(redisKey));
         }
 
         /// <summary>
@@ -452,10 +430,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<string>> HashValuesAsync(string redisKey)
+        public static async Task<IEnumerable<string>> HashValuesAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return ConvertStrings(await _db.HashValuesAsync(redisKey));
+            return ConvertStrings(await GetDatabase(dbNum, redisUrl).HashValuesAsync(redisKey));
         }
 
         /// <summary>
@@ -465,10 +442,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="hashField"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static async Task<bool> HashSetAsync<T>(string redisKey, string hashField, T value)
+        public static async Task<bool> HashSetAsync<T>(string redisKey, string hashField, T value, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.HashSetAsync(redisKey, hashField, value.ToJson());
+            return await GetDatabase(dbNum, redisUrl).HashSetAsync(redisKey, hashField, value.ToJson());
         }
 
         /// <summary>
@@ -477,10 +453,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="hashField"></param>
         /// <returns></returns>
-        public static async Task<T> HashGetAsync<T>(string redisKey, string hashField)
+        public static async Task<T> HashGetAsync<T>(string redisKey, string hashField, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value= (await _db.HashGetAsync(redisKey, hashField));
+            var value= (await GetDatabase(dbNum, redisUrl).HashGetAsync(redisKey, hashField));
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -498,10 +473,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static string ListLeftPop(string redisKey)
+        public static string ListLeftPop(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListLeftPop(redisKey);
+            return GetDatabase(dbNum, redisUrl).ListLeftPop(redisKey);
         }
 
         /// <summary>
@@ -509,10 +483,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static string ListRightPop(string redisKey)
+        public static string ListRightPop(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListRightPop(redisKey);
+            return GetDatabase(dbNum, redisUrl).ListRightPop(redisKey);
         }
 
         /// <summary>
@@ -521,10 +494,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static long ListRemove(string redisKey, string redisValue)
+        public static long ListRemove(string redisKey, string redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListRemove(redisKey, redisValue);
+            return GetDatabase(dbNum, redisUrl).ListRemove(redisKey, redisValue);
         }
 
         /// <summary>
@@ -533,10 +505,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static long ListRightPush(string redisKey, string redisValue)
+        public static long ListRightPush(string redisKey, string redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListRightPush(redisKey, redisValue);
+            return GetDatabase(dbNum, redisUrl).ListRightPush(redisKey, redisValue);
         }
 
         /// <summary>
@@ -545,10 +516,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static long ListLeftPush(string redisKey, string redisValue)
+        public static long ListLeftPush(string redisKey, string redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListLeftPush(redisKey, redisValue);
+            return GetDatabase(dbNum, redisUrl).ListLeftPush(redisKey, redisValue);
         }
 
         /// <summary>
@@ -556,10 +526,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static long ListLength(string redisKey)
+        public static long ListLength(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListLength(redisKey);
+            return GetDatabase(dbNum, redisUrl).ListLength(redisKey);
         }
 
         /// <summary>
@@ -569,10 +538,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="start"></param>
         /// <param name="stop"></param>
         /// <returns></returns>
-        public static IEnumerable<string> ListRange(string redisKey, long start = 0L, long stop = -1L)
+        public static IEnumerable<string> ListRange(string redisKey, long start = 0L, long stop = -1L, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return ConvertStrings(_db.ListRange(redisKey, start, stop));
+            return ConvertStrings(GetDatabase(dbNum, redisUrl).ListRange(redisKey, start, stop));
         }
 
         /// <summary>
@@ -580,10 +548,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static T ListLeftPop<T>(string redisKey)
+        public static T ListLeftPop<T>(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value=(_db.ListLeftPop(redisKey));
+            var value=(GetDatabase(dbNum, redisUrl).ListLeftPop(redisKey));
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -595,10 +562,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static T ListRightPop<T>(string redisKey)
+        public static T ListRightPop<T>(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value=(_db.ListRightPop(redisKey));
+            var value=(GetDatabase(dbNum, redisUrl).ListRightPop(redisKey));
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -611,10 +577,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static long ListRightPush<T>(string redisKey, T redisValue)
+        public static long ListRightPush<T>(string redisKey, T redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListRightPush(redisKey, redisValue.ToJson());
+            return GetDatabase(dbNum, redisUrl).ListRightPush(redisKey, redisValue.ToJson());
         }
 
         /// <summary>
@@ -623,10 +588,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static long ListLeftPush<T>(string redisKey, T redisValue)
+        public static long ListLeftPush<T>(string redisKey, T redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.ListLeftPush(redisKey, redisValue.ToJson());
+            return GetDatabase(dbNum, redisUrl).ListLeftPush(redisKey, redisValue.ToJson());
         }
 
         #region List-async
@@ -636,10 +600,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<string> ListLeftPopAsync(string redisKey)
+        public static async Task<string> ListLeftPopAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListLeftPopAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).ListLeftPopAsync(redisKey);
         }
 
         /// <summary>
@@ -647,10 +610,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<string> ListRightPopAsync(string redisKey)
+        public static async Task<string> ListRightPopAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListRightPopAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).ListRightPopAsync(redisKey);
         }
 
         /// <summary>
@@ -659,10 +621,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static async Task<long> ListRemoveAsync(string redisKey, string redisValue)
+        public static async Task<long> ListRemoveAsync(string redisKey, string redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListRemoveAsync(redisKey, redisValue);
+            return await GetDatabase(dbNum, redisUrl).ListRemoveAsync(redisKey, redisValue);
         }
 
         /// <summary>
@@ -671,10 +632,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static async Task<long> ListRightPushAsync(string redisKey, string redisValue)
+        public static async Task<long> ListRightPushAsync(string redisKey, string redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListRightPushAsync(redisKey, redisValue);
+            return await GetDatabase(dbNum, redisUrl).ListRightPushAsync(redisKey, redisValue);
         }
 
         /// <summary>
@@ -683,10 +643,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static async Task<long> ListLeftPushAsync(string redisKey, string redisValue)
+        public static async Task<long> ListLeftPushAsync(string redisKey, string redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListLeftPushAsync(redisKey, redisValue);
+            return await GetDatabase(dbNum, redisUrl).ListLeftPushAsync(redisKey, redisValue);
         }
 
         /// <summary>
@@ -694,10 +653,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<long> ListLengthAsync(string redisKey)
+        public static async Task<long> ListLengthAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListLengthAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).ListLengthAsync(redisKey);
         }
 
         /// <summary>
@@ -707,10 +665,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="start"></param>
         /// <param name="stop"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<string>> ListRangeAsync(string redisKey, long start = 0L, long stop = -1L)
+        public static async Task<IEnumerable<string>> ListRangeAsync(string redisKey, long start = 0L, long stop = -1L, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var query = await _db.ListRangeAsync(redisKey, start, stop);
+            var query = await GetDatabase(dbNum, redisUrl).ListRangeAsync(redisKey, start, stop);
             return query.Select(x => x.ToString());
         }
 
@@ -719,10 +676,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<T> ListLeftPopAsync<T>(string redisKey)
+        public static async Task<T> ListLeftPopAsync<T>(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value = (await _db.ListLeftPopAsync(redisKey));
+            var value = (await GetDatabase(dbNum, redisUrl).ListLeftPopAsync(redisKey));
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -734,10 +690,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<T> ListRightPopAsync<T>(string redisKey)
+        public static async Task<T> ListRightPopAsync<T>(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            var value = (await _db.ListRightPopAsync(redisKey));
+            var value = (await GetDatabase(dbNum, redisUrl).ListRightPopAsync(redisKey));
             if (value.HasValue)
                 return value.ToString().FromJson<T>();
             else
@@ -750,10 +705,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static async Task<long> ListRightPushAsync<T>(string redisKey, T redisValue)
+        public static async Task<long> ListRightPushAsync<T>(string redisKey, T redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListRightPushAsync(redisKey, redisValue.ToJson());
+            return await GetDatabase(dbNum, redisUrl).ListRightPushAsync(redisKey, redisValue.ToJson());
         }
 
         /// <summary>
@@ -762,10 +716,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisValue"></param>
         /// <returns></returns>
-        public static async Task<long> ListLeftPushAsync<T>(string redisKey, T redisValue)
+        public static async Task<long> ListLeftPushAsync<T>(string redisKey, T redisValue, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.ListLeftPushAsync(redisKey, redisValue.ToJson());
+            return await GetDatabase(dbNum, redisUrl).ListLeftPushAsync(redisKey, redisValue.ToJson());
         }
 
         #endregion List-async
@@ -781,10 +734,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="member"></param>
         /// <param name="score"></param>
         /// <returns></returns>
-        public static bool SortedSetAdd(string redisKey, string member, double score)
+        public static bool SortedSetAdd(string redisKey, string member, double score, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.SortedSetAdd(redisKey, member, score);
+            return GetDatabase(dbNum, redisUrl).SortedSetAdd(redisKey, member, score);
         }
 
         /// <summary>
@@ -796,10 +748,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="order"></param>
         /// <returns></returns>
         public static IEnumerable<string> SortedSetRangeByRank(string redisKey, long start = 0L, long stop = -1L,
-            Order order = Order.Ascending)
+            Order order = Order.Ascending, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.SortedSetRangeByRank(redisKey, start, stop, order).Select(x => x.ToString());
+            return GetDatabase(dbNum, redisUrl).SortedSetRangeByRank(redisKey, start, stop, order).Select(x => x.ToString());
         }
 
         /// <summary>
@@ -807,10 +758,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static long SortedSetLength(string redisKey)
+        public static long SortedSetLength(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.SortedSetLength(redisKey);
+            return GetDatabase(dbNum, redisUrl).SortedSetLength(redisKey);
         }
 
         /// <summary>
@@ -819,10 +769,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="memebr"></param>
         /// <returns></returns>
-        public static bool SortedSetLength(string redisKey, string memebr)
+        public static bool SortedSetLength(string redisKey, string memebr, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.SortedSetRemove(redisKey, memebr);
+            return GetDatabase(dbNum, redisUrl).SortedSetRemove(redisKey, memebr);
         }
 
         /// <summary>
@@ -832,11 +781,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="member"></param>
         /// <param name="score"></param>
         /// <returns></returns>
-        public static bool SortedSetAdd<T>(string redisKey, T member, double score)
+        public static bool SortedSetAdd<T>(string redisKey, T member, double score, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-
-            return _db.SortedSetAdd(redisKey, member.ToJson(), score);
+            return GetDatabase(dbNum, redisUrl).SortedSetAdd(redisKey, member.ToJson(), score);
         }
 
         /// <summary>
@@ -846,10 +793,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="member"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static double SortedSetIncrement(string redisKey, string member, double value = 1)
+        public static double SortedSetIncrement(string redisKey, string member, double value = 1, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.SortedSetIncrement(redisKey, member, value);
+            return GetDatabase(dbNum, redisUrl).SortedSetIncrement(redisKey, member, value);
         }
 
         #region SortedSet-Async
@@ -861,10 +807,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="member"></param>
         /// <param name="score"></param>
         /// <returns></returns>
-        public static async Task<bool> SortedSetAddAsync(string redisKey, string member, double score)
+        public static async Task<bool> SortedSetAddAsync(string redisKey, string member, double score, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.SortedSetAddAsync(redisKey, member, score);
+            return await GetDatabase(dbNum, redisUrl).SortedSetAddAsync(redisKey, member, score);
         }
 
         /// <summary>
@@ -872,10 +817,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<IEnumerable<string>> SortedSetRangeByRankAsync(string redisKey)
+        public static async Task<IEnumerable<string>> SortedSetRangeByRankAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return ConvertStrings(await _db.SortedSetRangeByRankAsync(redisKey));
+            return ConvertStrings(await GetDatabase(dbNum, redisUrl).SortedSetRangeByRankAsync(redisKey));
         }
 
         /// <summary>
@@ -883,10 +827,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<long> SortedSetLengthAsync(string redisKey)
+        public static async Task<long> SortedSetLengthAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.SortedSetLengthAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).SortedSetLengthAsync(redisKey);
         }
 
         /// <summary>
@@ -895,10 +838,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="memebr"></param>
         /// <returns></returns>
-        public static async Task<bool> SortedSetRemoveAsync(string redisKey, string memebr)
+        public static async Task<bool> SortedSetRemoveAsync(string redisKey, string memebr, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.SortedSetRemoveAsync(redisKey, memebr);
+            return await GetDatabase(dbNum, redisUrl).SortedSetRemoveAsync(redisKey, memebr);
         }
 
         /// <summary>
@@ -908,10 +850,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="member"></param>
         /// <param name="score"></param>
         /// <returns></returns>
-        public static async Task<bool> SortedSetAddAsync<T>(string redisKey, T member, double score)
+        public static async Task<bool> SortedSetAddAsync<T>(string redisKey, T member, double score, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.SortedSetAddAsync(redisKey, member.ToJson(), score);
+            return await GetDatabase(dbNum, redisUrl).SortedSetAddAsync(redisKey, member.ToJson(), score);
         }
 
         /// <summary>
@@ -921,10 +862,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="member"></param>
         /// <param name="value"></param>
         /// <returns></returns>
-        public static Task<double> SortedSetIncrementAsync(string redisKey, string member, double value = 1)
+        public static Task<double> SortedSetIncrementAsync(string redisKey, string member, double value = 1, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.SortedSetIncrementAsync(redisKey, member, value);
+            return GetDatabase(dbNum, redisUrl).SortedSetIncrementAsync(redisKey, member, value);
         }
 
         #endregion SortedSet-Async
@@ -938,10 +878,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static bool KeyDelete(string redisKey)
+        public static bool KeyDelete(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.KeyDelete(redisKey);
+            return GetDatabase(dbNum, redisUrl).KeyDelete(redisKey);
         }
 
         /// <summary>
@@ -949,10 +888,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKeys"></param>
         /// <returns></returns>
-        public static long KeyDelete(IEnumerable<string> redisKeys)
+        public static long KeyDelete(IEnumerable<string> redisKeys, int dbNum = 0, string redisUrl = "")
         {
-            var keys = redisKeys.Select(x => (RedisKey)AddKeyPrefix(x));
-            return _db.KeyDelete(keys.ToArray());
+            var keys = redisKeys.Select(x => (RedisKey)x);
+            return GetDatabase(dbNum, redisUrl).KeyDelete(keys.ToArray());
         }
 
         /// <summary>
@@ -960,10 +899,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static bool KeyExists(string redisKey)
+        public static bool KeyExists(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.KeyExists(redisKey);
+            return GetDatabase(dbNum, redisUrl).KeyExists(redisKey);
         }
 
         /// <summary>
@@ -972,10 +910,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisNewKey"></param>
         /// <returns></returns>
-        public static bool KeyRename(string redisKey, string redisNewKey)
+        public static bool KeyRename(string redisKey, string redisNewKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.KeyRename(redisKey, redisNewKey);
+            return GetDatabase(dbNum, redisUrl).KeyRename(redisKey, redisNewKey);
         }
 
         /// <summary>
@@ -984,10 +921,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public static bool KeyExpire(string redisKey, TimeSpan? expiry)
+        public static bool KeyExpire(string redisKey, TimeSpan? expiry, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return _db.KeyExpire(redisKey, expiry);
+            return GetDatabase(dbNum, redisUrl).KeyExpire(redisKey, expiry);
         }
 
         #region key-async
@@ -997,10 +933,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<bool> KeyDeleteAsync(string redisKey)
+        public static async Task<bool> KeyDeleteAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.KeyDeleteAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).KeyDeleteAsync(redisKey);
         }
 
         /// <summary>
@@ -1008,10 +943,10 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKeys"></param>
         /// <returns></returns>
-        public static async Task<long> KeyDeleteAsync(IEnumerable<string> redisKeys)
+        public static async Task<long> KeyDeleteAsync(IEnumerable<string> redisKeys, int dbNum = 0, string redisUrl = "")
         {
-            var keys = redisKeys.Select(x => (RedisKey)AddKeyPrefix(x));
-            return await _db.KeyDeleteAsync(keys.ToArray());
+            var keys = redisKeys.Select(x => (RedisKey)x);
+            return await GetDatabase(dbNum, redisUrl).KeyDeleteAsync(keys.ToArray());
         }
 
         /// <summary>
@@ -1019,10 +954,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// </summary>
         /// <param name="redisKey"></param>
         /// <returns></returns>
-        public static async Task<bool> KeyExistsAsync(string redisKey)
+        public static async Task<bool> KeyExistsAsync(string redisKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.KeyExistsAsync(redisKey);
+            return await GetDatabase(dbNum, redisUrl).KeyExistsAsync(redisKey);
         }
 
         /// <summary>
@@ -1031,10 +965,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="redisNewKey"></param>
         /// <returns></returns>
-        public static async Task<bool> KeyRenameAsync(string redisKey, string redisNewKey)
+        public static async Task<bool> KeyRenameAsync(string redisKey, string redisNewKey, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.KeyRenameAsync(redisKey, redisNewKey);
+            return await GetDatabase(dbNum, redisUrl).KeyRenameAsync(redisKey, redisNewKey);
         }
 
         /// <summary>
@@ -1043,10 +976,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="redisKey"></param>
         /// <param name="expiry"></param>
         /// <returns></returns>
-        public static async Task<bool> KeyExpireAsync(string redisKey, TimeSpan? expiry)
+        public static async Task<bool> KeyExpireAsync(string redisKey, TimeSpan? expiry, int dbNum = 0, string redisUrl = "")
         {
-            redisKey = AddKeyPrefix(redisKey);
-            return await _db.KeyExpireAsync(redisKey, expiry);
+            return await GetDatabase(dbNum, redisUrl).KeyExpireAsync(redisKey, expiry);
         }
 
         #endregion key-async
@@ -1058,8 +990,9 @@ namespace PaymentCenter.Infrastructure.Redis
         /// Redis发布订阅  订阅
         /// </summary>
         /// <param name="subChannel"></param>
-        public static void RedisSub(string subChannel, Action<string, string> onMessage = null)
+        public static void RedisSub(string subChannel, Action<string, string> onMessage = null, string redisUrl = "")
         {
+            var _sub = GetSubscriber(redisUrl);
             _sub.Subscribe(subChannel, (channel, message) =>
             {
                 onMessage?.Invoke(channel, message);
@@ -1072,24 +1005,26 @@ namespace PaymentCenter.Infrastructure.Redis
         /// <param name="channel"></param>
         /// <param name="msg"></param>
         /// <returns></returns>
-        public static long RedisPub<T>(string channel, T msg)
+        public static long RedisPub<T>(string channel, T msg, string redisUrl = "")
         {
-
+            var _sub = GetSubscriber(redisUrl);
             return _sub.Publish(channel, msg.ToJson());
         }
         /// <summary>
         /// Redis发布订阅  取消订阅
         /// </summary>
         /// <param name="channel"></param>
-        public static void Unsubscribe(string channel)
+        public static void Unsubscribe(string channel, string redisUrl = "")
         {
+            var _sub = GetSubscriber(redisUrl);
             _sub.Unsubscribe(channel);
         }
         /// <summary>
         /// Redis发布订阅  取消全部订阅
         /// </summary>
-        public static void UnsubscribeAll()
+        public static void UnsubscribeAll(string redisUrl = "")
         {
+            var _sub = GetSubscriber(redisUrl);
             _sub.UnsubscribeAll();
         }
         #endregion

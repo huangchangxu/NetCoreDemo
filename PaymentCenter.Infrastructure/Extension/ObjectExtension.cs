@@ -27,23 +27,5 @@ namespace PaymentCenter.Infrastructure.Extension
         {
             return(obj==null);
         }
-        /// <summary>
-        /// 扩展Dictionary  使其获取不异常
-        /// </summary>
-        /// <typeparam name="TInt"></typeparam>
-        /// <typeparam name="TOut"></typeparam>
-        /// <param name="dic"></param>
-        /// <param name="key">key</param>
-        /// <param name="defalutVal">获取异常 默认返回的值</param>
-        /// <returns></returns>
-        public static TOut TryGet<TInt, TOut>(this Dictionary<TInt, TOut> dic, TInt key, TOut defalutVal = default(TOut))
-        {
-            var flag = dic.TryGetValue(key, out TOut result);
-            if (!flag)
-            {
-                result = defalutVal;
-            }
-            return result;
-        }
     }
 }

@@ -1,41 +1,29 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace PaymentCenter.Infrastructure.Redis
+﻿namespace PaymentCenter.Infrastructure.Redis
 {
     /// <summary>
     /// Redis链接配置
     /// </summary>
     public class RedisClientConfigurations
     {
+        private string _url;
+        private int _connectTimeout;
+        private int _connectRetry;
+
         /// <summary>
-        /// 服务器地址
+        /// 服务器地址{IP}:{Port}
         /// </summary>
-        public string Url { get; set; }
+        public string Url { get { return string.IsNullOrEmpty(_url) ? "192.168.2.8:7379" : _url; } set => _url = value; }
         /// <summary>
-        /// 端口号
+        /// 链接超时时间
         /// </summary>
-        public int Port { get; set; }
-       /// <summary>
-       /// 链接超时时间
-       /// </summary>
-        public int ConnectTimeout { get; set; }
+        public int ConnectTimeout { get { return _connectTimeout == 0 ? 5000 : _connectTimeout; } set => _connectTimeout = value; }
         /// <summary>
         /// 链接尝试次数
         /// </summary>
-        public int ConnectRetry { get; set; }
-        /// <summary>
-        /// db
-        /// </summary>
-        public int DefaultDatabase { get; set; }
+        public int ConnectRetry { get { return 5; } }
         /// <summary>
         /// 订阅消息是否有序传递
         /// </summary>
-        public bool PreserveAsyncOrder { get; set; }
-        /// <summary>
-        /// 默认的 Key 值（用来当作 RedisKey 的前缀）
-        /// </summary>
-        public string DefaultKey;
+        public bool PreserveAsyncOrder { get => true;}
     }
 }

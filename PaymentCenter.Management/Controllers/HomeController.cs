@@ -49,7 +49,12 @@ namespace PaymentCenter.Management.Controllers
         /// <returns></returns>
         public IActionResult Login()
         {
-            throw new Exception("dadfasf");
+            return View();
+        }
+
+        public IActionResult Test()
+        {
+            ViewData["config"] = Infrastructure.ConfigCenter.ApplicationConfigHelper.AppSettings.Logging.IncludeScopes;
             return View();
         }
         /// <summary>
