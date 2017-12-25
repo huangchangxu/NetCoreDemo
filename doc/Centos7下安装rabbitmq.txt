@@ -1,0 +1,30 @@
+1、先需要安装erlang，参考：http://fedoraproject.org/wiki/EPEL/FAQ#howtouse
+
+	rpm -Uvh http://download.fedoraproject.org/pub/epel/7/x86_64/e/epel-release-7-10.noarch.rpm
+	yum install erlang
+	
+2、下载rpm：
+
+	wget http://www.rabbitmq.com/releases/rabbitmq-server/v3.6.12/rabbitmq-server-3.6.12-1.el7.noarch.rpm
+	
+3、下载完成后安装：
+
+	yum install rabbitmq-server-3.6.6-1.el7.noarch.rpm 
+	
+	完成后启动服务：
+
+	service rabbitmq-server start
+	可以查看服务状态：
+
+	service rabbitmq-server status
+	
+	开机自启动
+	chkconfig rabbitmq-server on
+
+	/sbin/service rabbitmq-server start
+	
+	增加用户
+
+	rabbitmqctl add_user xyt xyt
+
+	rabbitmqctl set_user_tags xyt administrator

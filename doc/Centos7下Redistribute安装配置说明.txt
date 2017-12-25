@@ -1,0 +1,17 @@
+1、关闭防火墙：
+	systemctl stop firewalld.service #停止firewall
+	systemctl disable firewalld.service #禁止firewall开机启动
+	firewall-cmd --state #查看默认防火墙状态（关闭后显示notrunning，开启后显示running）
+2、配置编译环境：
+	sudo yum install gcc-c++
+3、下载源码：
+	wget http://download.redis.io/releases/redis-4.0.2.tar.gz
+4、解压源码：
+	tar -zxvf redis-4.0.2.tar.gz
+	进入到解压目录：
+	cd redis-4.0.2
+5、执行make编译Redis：
+	make MALLOC=libc
+	注意：make命令执行完成编译后，会在src目录下生成6个可执行文件，分别是redis-server、redis-cli、redis-benchmark、redis-check-aof、redis-check-rdb、redis-sentinel。
+6、安装Redis：
+	make install 

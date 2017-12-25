@@ -1,0 +1,32 @@
+1. 导入elasticsearch PGP key 
+	rpm --import https://artifacts.elastic.co/GPG-KEY-elasticsearch
+2. 创建yum源文件
+	vim /etc/yum.repos.d/elasticsearch.repo
+
+	[elasticsearch-5.x]
+	name=Elasticsearch repository for 5.x packages
+	baseurl=https://artifacts.elastic.co/packages/5.x/yum
+	gpgcheck=1
+	gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+	enabled=1
+	autorefresh=1
+	type=rpm-md
+3. 安装elasticsearch
+
+   yum install elasticsearch -y
+   
+4. 配置elasticsearch.yml
+
+	vi /etc/elasticsearch/elasticsearch.yml
+	
+		cluster.name: elk                       #自定义集群名，相同集群内的节点设置相同的集群名
+		node.name: elk-node1                    #自定义节点名，建议统一采用节点hostname
+		path.data: /var/lib/elasticsearch       #data存储路径，可不取消注释，默认即此路径
+		path.logs: /var/log/elasticsearch       #log存储路径，可不取消注释，默认即此路径
+		network.host: 0.0.0.0                   #es监听地址，采用”0.0.0.0”，允许所有设备访问
+		http.port: 9200                         #es监听端口，可不取消注释，默认即此端口
+		discovery.zen.ping.unicast.hosts: ["elk-node1", "elk-node2"]     # 集群节点发现列表，也可采用ip的形式
+		discovery.zen.minimum_master_nodes: 2   #集群可做master的最小节点数，生产环境建议节点数至少3个且为基数
+		# 以下两项设置es5.x版本的head插件可以访问es
+		http.cors.enabled: true                 #开启跨域访问支持，默认为false
+		http.cors.allow-origin: "*"             #跨域访问允许的域名地址，使用正则表达式
