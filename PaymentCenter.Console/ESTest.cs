@@ -1,4 +1,5 @@
 ﻿using Nest;
+using PaymentCenter.Infrastructure.Extension;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -29,6 +30,12 @@ namespace PaymentCenter.ConsoleApp
                 new ResumeEsResponse().AddDocument(resume);
             }
         }
+
+        public static void Query()
+        {
+            var data = new ResumeEsResponse().Get();
+            Console.WriteLine(data.ToJson());
+        }
     }
     
     public class Resume
@@ -44,5 +51,17 @@ namespace PaymentCenter.ConsoleApp
     public class ResumeEsResponse : Infrastructure.Elasticsearch.ElasticsearchBaseResponse<Resume>
     {
         public override string IndexName { get => "resume"; }
+
+
+        public object Get()
+        {
+          var search=  elasticClient.Search<Resume>(s => s
+                .From(0)
+                .Size(10)
+                .Query(q => q
+                    .MatchAll())
+                );
+            return search.Documents;
+        }
     }
 }
