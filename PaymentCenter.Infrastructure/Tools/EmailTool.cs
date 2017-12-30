@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Security.Cryptography.X509Certificates;
 using System.Net.Security;
+using System.Linq;
 
 namespace PaymentCenter.Infrastructure.Tools
 {
@@ -108,7 +109,67 @@ namespace PaymentCenter.Infrastructure.Tools
                 client.Send(mail);
             }
         }
-        
+        /// <summary>
+        /// 使用FluentSmtpEmail发送邮件
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="subject"></param>
+        /// <param name="to"></param>
+        /// <param name="cc"></param>
+        public void SendEmailByFluentSmtpEmail(string body, string subject, string[] to, string[] cc = null)
+        {
+
+            FluentEmail.Core.Email.DefaultSender = new FluentEmail.Smtp.SmtpSender(new System.Net.Mail.SmtpClient
+            {
+                Port = _config.SmtpPort,
+                Host = _config.SmtpHost,
+                EnableSsl = _config.EnableSsl,
+                Credentials = new System.Net.NetworkCredential(_config.SmtpAccount, _config.SmtpPwd)
+            });
+            var email = FluentEmail.Core.Email
+                .From(_config.From)
+                .To(to.Select(t => new FluentEmail.Core.Models.Address { EmailAddress = t }).ToList())
+                .Subject(subject)
+                .Body(body, _config.BodyHtml);
+            if (cc != null && cc.Length > 0)
+                email.CC(cc.Select(c => new FluentEmail.Core.Models.Address { EmailAddress = c }).ToList());
+            email.Send();
+        }
+        /// <summary>
+        /// 使用FluentSmtpEmail发送邮件（消息模板）
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="template"></param>
+        /// <param name="data"></param>
+        /// <param name="subject"></param>
+        /// <param name="to"></param>
+        /// <param name="cc"></param>
+        /// <returns></returns>
+        public string SendTemplateEmailByFluent<T>(string template, T data,string subject, string[] to, string[] cc = null)
+        {
+            FluentEmail.Core.Email.DefaultRenderer = new FluentEmail.Razor.RazorRenderer();
+            FluentEmail.Core.Email.DefaultSender = new FluentEmail.Smtp.SmtpSender(new System.Net.Mail.SmtpClient
+            {
+                Port = _config.SmtpPort,
+                Host = _config.SmtpHost,
+                EnableSsl = _config.EnableSsl,
+                Credentials = new System.Net.NetworkCredential(_config.SmtpAccount, _config.SmtpPwd)
+            });
+
+            var email = FluentEmail.Core.Email
+               .From(_config.From)
+               .To(to.Select(t => new FluentEmail.Core.Models.Address { EmailAddress = t }).ToList())
+               .Subject(subject)
+               .UsingTemplate(template, data);
+
+            if (cc != null && cc.Length > 0)
+                email.CC(cc.Select(c => new FluentEmail.Core.Models.Address { EmailAddress = c }).ToList());
+            email.Send();
+
+            return email.Data.Body;
+        }
+
+
     }
     /// <summary>
     /// 发送邮件SMTP服务器配置信息
