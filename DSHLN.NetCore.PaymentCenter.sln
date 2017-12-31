@@ -1,15 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.12
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentCenter.Management", "PaymentCenter.Management\PaymentCenter.Management.csproj", "{299C72DF-A940-4FD2-9EAC-6CAE9C3CEF26}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentCenter.Management", "PaymentCenter.Management\PaymentCenter.Management.csproj", "{299C72DF-A940-4FD2-9EAC-6CAE9C3CEF26}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentCenter.Api", "PaymentCenter.Api\PaymentCenter.Api.csproj", "{A4CDB397-FA32-486B-B9FE-25C0914CF575}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentCenter.Api", "PaymentCenter.Api\PaymentCenter.Api.csproj", "{A4CDB397-FA32-486B-B9FE-25C0914CF575}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentCenter.ConsoleApp", "PaymentCenter.Console\PaymentCenter.ConsoleApp.csproj", "{18A4F322-2AFD-4035-88CE-37BEF2A214F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentCenter.ConsoleApp", "PaymentCenter.Console\PaymentCenter.ConsoleApp.csproj", "{18A4F322-2AFD-4035-88CE-37BEF2A214F6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentCenter.Infrastructure", "PaymentCenter.Infrastructure\PaymentCenter.Infrastructure.csproj", "{DA90283E-FF01-475A-9D79-1704835C12F5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PaymentCenter.Infrastructure", "PaymentCenter.Infrastructure\PaymentCenter.Infrastructure.csproj", "{DA90283E-FF01-475A-9D79-1704835C12F5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

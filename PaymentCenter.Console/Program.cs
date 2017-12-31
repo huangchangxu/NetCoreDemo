@@ -21,7 +21,7 @@ namespace PaymentCenter.ConsoleApp
 
             //ConfigTest.ConfigCenterGetTest();
 
-            ESTest.Add();
+            //ESTest.Query();
 
             Console.ReadLine();
         }
