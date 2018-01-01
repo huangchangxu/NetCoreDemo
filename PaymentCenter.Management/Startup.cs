@@ -9,7 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
 using PaymentCenter.Infrastructure.AutofacConfig;
-using PaymentCenter.Infrastructure.MiddlewareExtensions;
+using PaymentCenter.Infrastructure.Extension;
 
 namespace PaymentCenter.Management
 {

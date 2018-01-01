@@ -22,9 +22,12 @@ namespace PaymentCenter.Api
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             services.AddMvc();
+
+            Infrastructure.AutofacConfig.AutoFacContainer.Build<AutoFac.ApiModule>(services);
+            return new AutofacServiceProvider(Infrastructure.AutofacConfig.AutoFacContainer.container);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
