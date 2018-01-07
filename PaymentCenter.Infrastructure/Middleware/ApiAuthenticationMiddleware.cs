@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using PaymentCenter.Infrastructure.Authorization;
 using PaymentCenter.Infrastructure.Extension;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace PaymentCenter.Infrastructure.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            if (_authenticationHandle.AuthenticationVerification(context, out string msg))
+            if (_authenticationHandle.AuthVerification(context, out string msg))
             {
                 context.Response.OnCompleted(ResponseCompletedCallback, context);
                 await _next.Invoke(context);
@@ -37,16 +38,5 @@ namespace PaymentCenter.Infrastructure.Middleware
         {
             return Task.FromResult(0);
         }
-    }
-
-    public interface IApiAuthenticationHandle
-    {
-        /// <summary>
-        /// API访问授权身份校验
-        /// </summary>
-        /// <param name="context">Http请求上下文</param>
-        /// <param name="errormsg">校验结果描述</param>
-        /// <returns></returns>
-        bool AuthenticationVerification(HttpContext context, out string msg);
     }
 }

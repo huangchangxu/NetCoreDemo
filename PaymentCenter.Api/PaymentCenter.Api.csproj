@@ -4,6 +4,10 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile></DocumentationFile>
+  </PropertyGroup>
+
   <ItemGroup>
     <Compile Remove="wwwroot\**" />
     <Content Remove="wwwroot\**" />
@@ -23,6 +27,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PaymentCenter.Infrastructure\PaymentCenter.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Configs\" />
+    <Folder Include="Models\" />
   </ItemGroup>
 
 </Project>

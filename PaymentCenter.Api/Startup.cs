@@ -9,6 +9,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Autofac.Extensions.DependencyInjection;
+using PaymentCenter.Infrastructure.Extension;
+using PaymentCenter.Infrastructure.ConfigCenter;
 
 namespace PaymentCenter.Api
 {
@@ -16,6 +18,7 @@ namespace PaymentCenter.Api
     {
         public Startup(IConfiguration configuration)
         {
+            ConfigCenterHelper.GetInstance();
             Configuration = configuration;
         }
 
@@ -24,8 +27,10 @@ namespace PaymentCenter.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public IServiceProvider ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
-
+            services.AddMvc(option=> {
+                option.Filters.Add(new Infrastructure.Filters.ApiActionAuthenticationFilter());
+            });
+            services.AddScoped<Infrastructure.Filters.ApiActionAuthenticationFilter>();
             Infrastructure.AutofacConfig.AutoFacContainer.Build<AutoFac.ApiModule>(services);
             return new AutofacServiceProvider(Infrastructure.AutofacConfig.AutoFacContainer.container);
         }
@@ -37,6 +42,9 @@ namespace PaymentCenter.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+
+            //app.UseApiAuth();
+
             app.UseMvc();
         }
     }
