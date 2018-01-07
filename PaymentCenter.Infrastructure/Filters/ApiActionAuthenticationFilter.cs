@@ -11,14 +11,15 @@ namespace PaymentCenter.Infrastructure.Filters
     /// </summary>
     public class ApiActionAuthenticationFilter : IActionFilter
     {
-        private readonly Authorization.IApiAuthenticationHandle _authenticationHandle;
+        private readonly IApiAuthenticationHandle _authenticationHandle;
         public ApiActionAuthenticationFilter()
         {
-            _authenticationHandle = AutofacConfig.AutoFacContainer.container.Resolve<Authorization.IApiAuthenticationHandle>();
+            _authenticationHandle = AutofacConfig.AutoFacContainer.container.Resolve<IApiAuthenticationHandle>();
         }
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
+            //context.HttpContext.Response.ContentType = "application/json;charset=utf-8";
             //throw new System.NotImplementedException();
         }
 

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using PaymentCenter.Infrastructure.Extension;
 
 namespace PaymentCenter.Api.Controllers
 {
@@ -13,9 +14,15 @@ namespace PaymentCenter.Api.Controllers
     {
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IActionResult Get()
         {
-            return new string[] { "value1", "value2" };
+            return Content(new Infrastructure.Responses.ApiCommonResponseDto<object>(123).ToJson());
+        }
+        [Route("/getapi")]
+        [HttpGet]
+        public Infrastructure.Responses.ApiCommonResponseDto<object> GetApi()
+        {
+            return new Infrastructure.Responses.ApiCommonResponseDto<object>(123);
         }
 
         // POST api/values

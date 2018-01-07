@@ -21,17 +21,17 @@ namespace PaymentCenter.Infrastructure.Middleware
 
         public async Task Invoke(HttpContext context)
         {
-            if (_authenticationHandle.AuthVerification(context, out string msg))
-            {
-                context.Response.OnCompleted(ResponseCompletedCallback, context);
-                await _next.Invoke(context);
-            }
-            else
-            {
-                var data = new Responses.ApiCommonResponseDto<object>(401, msg);
+            //if (_authenticationHandle.AuthVerification(context, out string msg))
+            //{
+            //    context.Response.OnCompleted(ResponseCompletedCallback, context);
+            //    await _next.Invoke(context);
+            //}
+            //else
+            //{
+                var data = new Responses.ApiCommonResponseDto<object>(401, "");
                 context.Response.ContentType = "application/json;charset=utf-8";
                 await context.Response.WriteAsync(data.ToJson());
-            }
+            //}
         }
 
         private Task ResponseCompletedCallback(object obj)

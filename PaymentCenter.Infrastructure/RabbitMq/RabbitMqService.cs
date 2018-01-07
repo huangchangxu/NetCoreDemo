@@ -87,7 +87,7 @@ namespace PaymentCenter.Infrastructure.RabbitMq
         }
 
         public RabbitMqService(string url)
-        {
+        {//amqp://yangqijian:Aa1234@192.168.2.8:5672/DBFVHost
             url = url.Replace("amqp://", "");
             var configArray = url.Split('@');
             var userAndPwd = configArray[0];
@@ -97,8 +97,8 @@ namespace PaymentCenter.Infrastructure.RabbitMq
             {
                 UserName = userAndPwd.Split(':')[0],
                 Password = userAndPwd.Split(':')[1],
-                Host = ipAndPort.Split(':')[0],
-                VirtualHost = ipAndPort.Split(':')[1].TrimStart('/'),
+                Host = ipAndPort.Split('/')[0].Split(':')[0],
+                VirtualHost = ipAndPort.Split('/')[1].TrimStart('/'),
                 HeartBeat = 60,
                 AutomaticRecoveryEnabled = true
             };

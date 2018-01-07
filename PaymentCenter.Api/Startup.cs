@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Autofac.Extensions.DependencyInjection;
-using PaymentCenter.Infrastructure.Extension;
 using PaymentCenter.Infrastructure.ConfigCenter;
+using PaymentCenter.Infrastructure.Extension;
+using System;
 
 namespace PaymentCenter.Api
 {
@@ -29,6 +24,7 @@ namespace PaymentCenter.Api
         {
             services.AddMvc(option=> {
                 option.Filters.Add(new Infrastructure.Filters.ApiActionAuthenticationFilter());
+                option.Filters.Add(new Infrastructure.Filters.ApiResponseFormattingFilter());
             });
             services.AddScoped<Infrastructure.Filters.ApiActionAuthenticationFilter>();
             Infrastructure.AutofacConfig.AutoFacContainer.Build<AutoFac.ApiModule>(services);
@@ -42,8 +38,12 @@ namespace PaymentCenter.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders=Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor|Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto
+            });
 
-            //app.UseApiAuth();
+           app.UseApiMonitor();
 
             app.UseMvc();
         }

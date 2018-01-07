@@ -28,5 +28,14 @@ namespace PaymentCenter.Infrastructure.Extension
         {
             return builder.UseMiddleware<Middleware.ApiAuthenticationMiddleware>();
         }
+        /// <summary>
+        /// 添加API监控日志邮件
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <returns></returns>
+        public static IApplicationBuilder UseApiMonitor(this IApplicationBuilder builder)
+        {
+            return builder.UseMiddleware<Middleware.ApiMonitorMiddleware>();
+        }
     }
 }
