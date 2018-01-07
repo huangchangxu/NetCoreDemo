@@ -43,5 +43,22 @@ namespace PaymentCenter.Infrastructure.Extension
         {
             return (inputStr.IsNullOrEmpty() ? inputStr : inputStr.Replace(oldStr, newStr));
         }
+        /// <summary>
+        /// 解析JSON字符串生成实体
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="jsonStr"></param>
+        /// <returns></returns>
+        public static T JsonDeserialize<T>(this string jsonStr)where T:class
+        {
+            try
+            {
+                return Tools.JsonTool.DeserializeJsonToObject<T>(jsonStr);
+            }
+            catch
+            {
+                return default(T);
+            }
+        }
     }
 }

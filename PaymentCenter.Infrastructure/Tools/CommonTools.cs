@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 using System.Text;
 
 namespace PaymentCenter.Infrastructure.Tools
@@ -30,6 +32,20 @@ namespace PaymentCenter.Infrastructure.Tools
             long lTime = long.Parse(timeStamp + "0000000");
             TimeSpan toNow = new TimeSpan(lTime);
             return dtStart.Add(toNow);
+        }
+        /// <summary>
+        /// 根据特性Model数据是否合法
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="errormsg"></param>
+        /// <returns></returns>
+        public static bool ModelValidation(object data, out string errormsg)
+        {
+            var validationContext = new ValidationContext(data);
+            var resultValidation = new List<ValidationResult>();
+            var isValid = Validator.TryValidateObject(data, validationContext, resultValidation, true);
+            errormsg = string.Join("|", resultValidation.Select(x => x.ErrorMessage));
+            return isValid;
         }
     }
 }
