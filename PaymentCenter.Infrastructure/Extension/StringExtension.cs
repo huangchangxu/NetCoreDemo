@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -59,6 +60,20 @@ namespace PaymentCenter.Infrastructure.Extension
             {
                 return default(T);
             }
+        }
+        /// <summary>
+        /// 获取字符串的MD5值
+        /// </summary>
+        /// <param name="inputStr"></param>
+        /// <returns></returns>
+        public static string ToMd5(this string inputStr)
+        {
+            if (inputStr.IsNullOrEmpty())
+                return string.Empty;
+
+            MD5 mD5 = MD5.Create();
+            var md5Value = mD5.ComputeHash(Encoding.UTF8.GetBytes(inputStr));
+            return BitConverter.ToString(md5Value).Replace("-", "").ToLower();
         }
     }
 }

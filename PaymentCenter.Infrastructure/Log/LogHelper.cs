@@ -82,33 +82,18 @@ namespace PaymentCenter.Infrastructure.Log
             }
         }
 
-        public static void TryLog(string logInfo, LogType logType, string className = null, LogLevel logLevel = LogLevel.Info, bool sendMail = false)
+        public static void TryInfoLog(string logInfo, LogType logType, string className = null, LogLevel logLevel = LogLevel.Info, bool sendMail = false)
         {
             string message = string.Empty;
-            if (logInfo is string)
+            LogInfoDto dto = new LogInfoDto
             {
-                LogInfoDto dto = new LogInfoDto
-                {
-                    Message = logInfo as string,
-                    Level = logLevel,
-                    Class = className,
-                    Source = loggerSource
-                };
-                message = dto.ToJson();
+                Message = logInfo as string,
+                Level = logLevel,
+                Class = className,
+                Source = loggerSource
+            };
+            message = dto.ToJson();
 
-            }
-            else if (logInfo is LogInfoDto)
-            {
-                var data = logInfo as LogInfoDto;
-                data.Source = loggerSource;
-                message = data.ToJson();
-            }
-            else if (logInfo is LogMonitorDto)
-            {
-                var data = logInfo as LogMonitorDto;
-                data.Source = loggerSource;
-                message = data.ToJson();
-            }
 
             if (logType == LogType.File || logType == LogType.FileAndDb)
             {
@@ -126,8 +111,8 @@ namespace PaymentCenter.Infrastructure.Log
                 Task.Factory.StartNew(() =>
                 {
                     new RabbitMq.RabbitMqService(ConfigCenter.ConfigCenterHelper.GetInstance().Get("RabbitMqConfig.Url")).Publish("log.BaseFrameLog"
-                        , (logInfo is LogMonitorDto) ? "log.BaseFrameLogMonitor" : "log.BaseFrameLogInfo"
-                        , (logInfo is LogMonitorDto) ? "log.BaseFrameLogMonitor" : "log.BaseFrameLogInfo"
+                        ,  "log.BaseFrameLogInfo"
+                        ,  "log.BaseFrameLogInfo"
                         , message
                         , true);
                 });

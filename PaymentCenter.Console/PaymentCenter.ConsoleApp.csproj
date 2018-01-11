@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PaymentCenter.Infrastructure\PaymentCenter.Infrastructure.csproj" />
+    <ProjectReference Include="..\PaymentCenter.Repositorys\PaymentCenter.Repositorys.csproj" />
   </ItemGroup>
 
 </Project>
