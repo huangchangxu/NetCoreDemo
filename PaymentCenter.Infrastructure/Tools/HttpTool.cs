@@ -144,20 +144,16 @@ namespace PaymentCenter.Infrastructure.Tools
             else
             {
                 if (data is IDictionary<string, object>)
-                    (data as IDictionary<string, object>).ToHttpFormData();
+                    strData = (data as IDictionary<string, object>).ToHttpFormData();
                 else if (data is IList)
-                    (data as IList<object>).ToHttFormData();
+                    strData = (data as IList<object>).ToHttFormData();
                 else if (data is string)
                     strData = data as string;
                 else
                 {
                     List<string> list = new List<string>();
                     var dic = data.GetType().GetProperties().ToDictionary(p => p.Name, p => p.GetValue(data) == null ? "" : p.GetValue(data).ToString());
-                    foreach (var item in dic)
-                    {
-                        list.Add($"{item.Key}={System.Web.HttpUtility.UrlEncode(item.Value)}");
-                    }
-                    strData = $"{string.Join("&", list)}";
+                    strData = dic.ToHttpFormData();
                 }
             }
 

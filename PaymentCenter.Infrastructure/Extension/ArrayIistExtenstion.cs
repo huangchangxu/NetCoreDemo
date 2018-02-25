@@ -35,8 +35,9 @@ namespace PaymentCenter.Infrastructure.Extension
         /// <typeparam name="TKey"></typeparam>
         /// <typeparam name="TValue"></typeparam>
         /// <param name="dictionary"></param>
+        /// <param name="ignoreEmpty">是否忽略空值</param>
         /// <returns></returns>
-        public static string ToHttpFormData<TKey, TValue>(this IDictionary<TKey, TValue> dictionary)
+        public static string ToHttpFormData<TKey, TValue>(this IDictionary<TKey, TValue> dictionary,bool ignoreEmpty=true)
         {
             string result = string.Empty;
             if (dictionary != null && dictionary.Count > 0)
@@ -44,6 +45,8 @@ namespace PaymentCenter.Infrastructure.Extension
                 List<string> list = new List<string>();
                 foreach (var item in dictionary)
                 {
+                    if (ignoreEmpty && (item.Value.IsNull() || item.Value.ToString().IsNullOrEmpty()))
+                        continue;
                     list.Add($"{item.Key}={System.Web.HttpUtility.UrlEncode(item.Value.ToString())}");
                 }
                 result = string.Join("&", list);
@@ -57,7 +60,7 @@ namespace PaymentCenter.Infrastructure.Extension
         /// <typeparam name="T"></typeparam>
         /// <param name="list"></param>
         /// <returns></returns>
-        public static string ToHttFormData<T>(this IList<T> list) where T:class,new()
+        public static string ToHttFormData<T>(this IList<T> list, bool ignoreEmpty = true) where T:class,new()
         {
             string result = string.Empty;
             if (list != null && list.Count > 0)
@@ -69,9 +72,17 @@ namespace PaymentCenter.Infrastructure.Extension
                     foreach (var child in dic)
                     {
                         if (dic.ContainsKey(child.Key))
+                        {
+                            if (ignoreEmpty && child.Value.IsNullOrEmpty())
+                                break;
                             dictionary[child.Key] = dictionary[child.Key] + "," + child.Value;
+                        }
                         else
+                        {
+                            if (ignoreEmpty && child.Value.IsNullOrEmpty())
+                                break;
                             dictionary.Add(child.Key, child.Value);
+                        }
                     }
                 }
                 result = dictionary.ToHttpFormData();

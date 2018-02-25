@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace PaymentCenter.Infrastructure.Tools
 {
@@ -20,18 +22,31 @@ namespace PaymentCenter.Infrastructure.Tools
         /// 将对象序列化为JSON格式
         /// </summary>
         /// <param name="o">对象</param>
+        /// <param name="isCamelCasePropertyNames">是否驼峰命名属性名</param>
         /// <returns>json字符串</returns>
-        public static string SerializeObject(object o)
+        public static string SerializeObject(object o,bool isCamelCasePropertyNames=false)
         {
-            if (o == null || o.ToString() == "null") return null;
+            if (o == null) return null;
 
             if (o != null && (o.GetType() == typeof(String) || o.GetType() == typeof(string)))
             {
                 return o.ToString();
             }
-            IsoDateTimeConverter dt = new IsoDateTimeConverter();
-            dt.DateTimeFormat = DateTimeFormat;
-            return JsonConvert.SerializeObject(o, dt);
+            //IsoDateTimeConverter dt = new IsoDateTimeConverter
+            //{
+            //    DateTimeFormat = DateTimeFormat
+            //};
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+                DateFormatString = DateTimeFormat
+            };
+            if (isCamelCasePropertyNames)
+            {
+                settings.Formatting = Formatting.Indented;
+                settings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+            }
+            return JsonConvert.SerializeObject(o, settings);
         }
 
         /// <summary>
@@ -42,7 +57,7 @@ namespace PaymentCenter.Infrastructure.Tools
         /// <returns>对象实体集合</returns>
         public static List<T> DeserializeJsonToList<T>(string json) where T : class
         {
-            Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
+            JsonSerializer serializer = new JsonSerializer();
             StringReader sr = new StringReader(json);
             object o = serializer.Deserialize(new JsonTextReader(sr), typeof(List<T>));
             List<T> list = o as List<T>;
@@ -76,5 +91,21 @@ namespace PaymentCenter.Infrastructure.Tools
             T t = JsonConvert.DeserializeAnonymousType(json, anonymousTypeObject);
             return t;
         }
+    }
+
+    public class JsonPropertyContractResolver : DefaultContractResolver
+    {
+        IEnumerable<string> lstIgnore;
+
+        public JsonPropertyContractResolver(IEnumerable<string> ignoreProperties)
+        {
+            lstIgnore = ignoreProperties;
+        }
+
+        protected override IList<JsonProperty> CreateProperties(Type type, MemberSerialization memberSerialization)
+        {
+            return base.CreateProperties(type, memberSerialization).ToList().FindAll(p => !lstIgnore.Contains(p.PropertyName));
+        }
+
     }
 }

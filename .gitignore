@@ -7,3 +7,5 @@
 /PaymentCenter.Management/bin
 /PaymentCenter.Management/obj
 /.vs
+/PaymentCenter.PaymentCore/bin
+/PaymentCenter.PaymentCore/obj
