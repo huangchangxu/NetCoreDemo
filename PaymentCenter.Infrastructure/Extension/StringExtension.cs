@@ -75,5 +75,30 @@ namespace PaymentCenter.Infrastructure.Extension
             var md5Value = mD5.ComputeHash(Encoding.UTF8.GetBytes(inputStr));
             return BitConverter.ToString(md5Value).Replace("-", "").ToLower();
         }
+        /// <summary>
+        /// Url编码
+        /// </summary>
+        /// <param name="inputStr"></param>
+        /// <returns></returns>
+        public static string UrlEncode(this string inputStr)
+        {
+            if (inputStr.IsNullOrEmpty())
+                return string.Empty;
+            return System.Web.HttpUtility.UrlEncode(inputStr);
+        }
+        /// <summary>
+        /// url解码
+        /// </summary>
+        /// <param name="inputStr"></param>
+        /// <returns></returns>
+        public static string UrlDecode(this string inputStr)
+        {
+            if (inputStr.IsNullOrEmpty())
+                return string.Empty;
+
+            return System.Web.HttpUtility.UrlDecode(inputStr);
+        }
+
+
     }
 }

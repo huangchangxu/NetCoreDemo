@@ -16,6 +16,10 @@ namespace PaymentCenter.PaymentCore.UcfPay
         /// <summary>
         /// SDK认证支付创建支付订单
         /// </summary>
-        MOBILE_CERTPAY_ORDER_CREATE
+        MOBILE_CERTPAY_ORDER_CREATE,
+        /// <summary>
+        /// 支付查询
+        /// </summary>
+        MOBILE_CERTPAY_QUERYORDERSTATUS
     }
 }
